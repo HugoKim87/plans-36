@@ -112,8 +112,11 @@ function renderLogButtons(L){
   const wi=$("wInput");
   if(document.activeElement!==wi) wi.value=typeof L.weight==="number"?L.weight.toFixed(1):"";
   const db=$("doneBtn");
-  db.setAttribute("aria-pressed",L.done?"true":"false");
-  db.textContent=L.done?"✓ 운동 완료":"운동 완료 표시";
+  const bySoccer=L.soccer===true;
+  db.setAttribute("aria-pressed",isDone(L)?"true":"false");
+  db.textContent=bySoccer?"✓ 운동 완료 (축구)":L.done?"✓ 운동 완료":"운동 완료 표시";
+  db.disabled=bySoccer;   // 축구로 완료된 날은 축구 체크를 풀어야 바뀜
+  db.title=bySoccer?"축구를 체크해서 자동으로 완료 처리됐습니다. 바꾸려면 축구 체크를 해제하세요.":"";
   const isSun=dowOf(cur)===6;
   const sb1=$("soccerBtn"), sb2=$("noSoccerBtn");
   sb1.setAttribute("aria-pressed",L.soccer===true?"true":"false");
@@ -179,7 +182,7 @@ function renderWeek(){
       return esc(nm)+" <span class='num'>"+esc(dose)+"</span>";
     });
     const card=el("button",{class:"day"+(d===TODAY?" today":""),type:"button"});
-    card.innerHTML='<div class="dh"><span class="dd">'+KD[i]+' '+md(d)+'</span><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span></div><div><b>'+esc(x.title)+'</b> <span class="muted small">'+esc(x.sub)+'</span></div><ul>'+items.map(t=>"<li>"+t+"</li>").join("")+'</ul>'+(L.soccer===true?'<span class="done">⚽ 축구</span>':"")+(L.done&&L.soccer!==true?'<span class="done">✓ 완료</span>':"")+(typeof L.weight==="number"?'<span class="small muted">체중 <span class="num">'+L.weight.toFixed(1)+'</span>kg</span>':"");
+    card.innerHTML='<div class="dh"><span class="dd">'+KD[i]+' '+md(d)+'</span><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span></div><div><b>'+esc(x.title)+'</b> <span class="muted small">'+esc(x.sub)+'</span></div><ul>'+items.map(t=>"<li>"+t+"</li>").join("")+'</ul>'+(L.soccer===true?'<span class="done">⚽ 축구</span>':"")+(isDone(L)&&L.soccer!==true?'<span class="done">✓ 완료</span>':"")+(typeof L.weight==="number"?'<span class="small muted">체중 <span class="num">'+L.weight.toFixed(1)+'</span>kg</span>':"");
     card.addEventListener("click",()=>{cur=d;showTab("today");renderToday();window.scrollTo(0,0)});
     box.appendChild(card);
   }

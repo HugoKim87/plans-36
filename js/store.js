@@ -105,7 +105,7 @@ const Store=(function(){
     hasAuth:()=>!!sb,
     weekAvg:w=>weekAvgOf(d=>logs[d],w),
     weekDone(w){
-      let n=0;for(let i=0;i<7;i++){const v=logs[addDays(weekStart(w),i)];if(v&&(v.done||v.soccer===true))n++}
+      let n=0;for(let i=0;i<7;i++){if(isDone(logs[addDays(weekStart(w),i)]))n++}
       return n;
     },
     latest(){

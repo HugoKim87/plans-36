@@ -51,7 +51,7 @@ function saveWeight(){
 }
 $("wSave").addEventListener("click",saveWeight);
 $("wInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveWeight()}});
-$("doneBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{done:!L.done})});
+$("doneBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};if(L.soccer===true)return;Store.save(cur,{done:!L.done})});
 // 축구: true=다녀옴, false=일요일 안 감, null=기록 없음(다시 누르면 해제)
 $("soccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{soccer:L.soccer===true?null:true})});
 $("noSoccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{soccer:L.soccer===false?null:false})});
