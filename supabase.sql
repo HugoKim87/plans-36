@@ -44,3 +44,7 @@ create policy "own rows update" on public.workout_log
   for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own rows delete" on public.workout_log
   for delete to authenticated using (auth.uid() = user_id);
+
+-- 축구 기록 칼럼 (일요일/주중 축구 반영)
+-- true = 축구함, false = 일요일 안 감, null = 기록 없음
+alter table public.workout_log add column if not exists soccer boolean;
