@@ -56,6 +56,22 @@ $("doneBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save
 $("soccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{soccer:L.soccer===true?null:true})});
 $("noSoccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{soccer:L.soccer===false?null:false})});
 
+/* ---------- 측정 결과 ---------- */
+$("metricsPanel").addEventListener("submit",e=>{
+  e.preventDefault();
+  const out={}, bad=[];
+  METRICS.forEach(f=>{
+    const raw=$("m_"+f.key).value.trim();
+    if(raw==="") return;                       // 비운 항목은 저장하지 않음
+    const v=Number(raw);
+    if(!Number.isFinite(v)||v<f.min||v>f.max) bad.push(f.name+" "+f.min+"~"+f.max+f.unit);
+    else out[f.key]=v;
+  });
+  if(bad.length){$("mStatus").textContent="범위를 확인하세요: "+bad.join(", ");return}
+  Store.save(cur,{metrics:out});
+  $("mStatus").textContent=Object.keys(out).length?"저장했습니다. 다음 날부터 처방에 반영됩니다.":"측정 기록을 비웠습니다.";
+});
+
 /* ---------- 로그인 ---------- */
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();

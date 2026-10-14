@@ -1,5 +1,6 @@
 "use strict";
 /* 일정 규칙: 단계별 세션, 축구 반영, 디로드·측정 (DOM과 저장소에 의존하지 않는 순수 로직) */
+// 처방 표(PLAN)를 짧게 쓰기 위한 생성 함수: B=근력 블록, R=로잉, C=서킷
 const B=(ex,sets,reps,note)=>({ex,sets,reps,note});
 const R=(text,note)=>({ex:"row",text,note});
 const C=(rounds,items,note)=>({circuit:true,rounds,items,note});
@@ -80,7 +81,7 @@ function plannedFor(log,s,I,P,step){
 }
 function testDay(label){
   return {kind:"test",title:"체력 측정",sub:label,blocks:[
-    NOTE("아침 공복 체중 · 배꼽 높이 허리둘레 · 정면/옆모습 사진"),
+    NOTE("아침 공복 체중 · 배꼽 높이 허리둘레 측정 → 아래 '측정 결과 기록'에 입력"),
     R("워밍업 5분 가볍게"),
     B("pullup",1,"최대 개수","반동 없이 턱이 바 위로"),
     B("pushup",1,"최대 개수","3분 쉬고 시작"),
@@ -103,7 +104,8 @@ function deloadify(sess){
     if(b.sets) return Object.assign({},b,{sets:Math.max(2,b.sets-1)});
     return b;})});
 }
-function sessionFor(s,log=()=>undefined){
+// 측정 반영 전의 기본 일정 (측정 반영은 adapt.js의 sessionFor에서)
+function scheduledSession(s,log=()=>undefined){
   const I=info(s);
   if(I.prep){
     const base=PREP[s]||PREP[PREP0];

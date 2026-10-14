@@ -48,6 +48,12 @@
     <div class="blocks" id="sessBlocks"></div>
     <p class="small muted mt-s">운동 이름을 누르면 방법이 펼쳐집니다.</p>
   </div>
+  <form class="panel stack" id="metricsPanel" novalidate hidden>
+    <h3>측정 결과 기록</h3>
+    <div class="mgrid" id="metricsFields"></div>
+    <div class="row"><button class="btn primary" type="submit" id="mSave">측정 결과 저장</button><span class="status" id="mStatus"></span></div>
+    <p class="small muted">비워 둔 항목은 지금 처방을 그대로 씁니다. 입력한 값으로 다음 측정 전까지 운동 횟수·버티기 시간·로잉 목표 페이스가 조정됩니다.</p>
+  </form>
   <div class="log">
     <div class="panel stack">
       <h3>오늘 기록</h3>
@@ -117,6 +123,11 @@
   <div>
     <h3 class="mb-s">월별 목표</h3>
     <div class="milestones" id="milestones"></div>
+  </div>
+  <div>
+    <h3 class="mb-s">체력 측정 기록</h3>
+    <div class="tbl-wrap"><table id="fitTable"></table></div>
+    <p class="small muted mt-s">측정일(토요일) 오늘 탭에서 입력합니다. 입력한 값으로 다음 측정 전까지 운동 처방이 자동 조정됩니다.</p>
   </div>
   <div class="panel prose">
     <h3>목표를 이렇게 잡았습니다</h3>
@@ -211,12 +222,13 @@
 
 </div></main>
 
-<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 저장소 → 화면 → 시작 순서로 로드 -->
+<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 측정 반영 → 저장소 → 화면 → 시작 순서로 로드 -->
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/util.js"></script>
 <script src="js/data.js"></script>
 <script src="js/plan.js"></script>
+<script src="js/adapt.js"></script>
 <script src="js/store.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>

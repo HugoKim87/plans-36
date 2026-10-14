@@ -48,3 +48,6 @@ create policy "own rows delete" on public.workout_log
 -- 축구 기록 칼럼 (일요일/주중 축구 반영)
 -- true = 축구함, false = 일요일 안 감, null = 기록 없음
 alter table public.workout_log add column if not exists soccer boolean;
+
+-- 체력 측정 결과 칼럼 (턱걸이·푸시업·플랭크·로잉 10분·허리둘레)
+alter table public.workout_log add column if not exists metrics jsonb;

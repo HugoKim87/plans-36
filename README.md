@@ -5,9 +5,9 @@
 
 ## 기능
 
-- **오늘**: 날짜별 운동(세트·횟수, 운동 이름을 누르면 방법과 영상 링크)과 식단, 체중·운동 완료·축구 기록
+- **오늘**: 날짜별 운동(세트·횟수, 운동 이름을 누르면 방법과 영상 링크)과 식단, 체중·운동 완료·축구 기록, 측정일 결과 입력
 - **주간표**: 1~36주차 요일별 운동, 축구한 날 ⚽ 표시
-- **목표**: 100kg → 78kg 주별·월별 목표 그래프와 표, 내 주 평균 비교
+- **목표**: 100kg → 78kg 주별·월별 목표 그래프와 표, 내 주 평균 비교, 체력 측정 기록 표
 - **운동법**: 로잉 자세, 턱걸이·푸시업·하체·코어 동작 설명과 유튜브 영상 검색 링크
 - **식단**: 단계별 칼로리·탄단지, 요일별 메뉴, 장보기, 바꿔 먹기
 - **습관**: 수면·수분·걷기·정체기·축구하는 날 규칙
@@ -23,6 +23,22 @@
 - 한 주에 주중 축구가 2회 이상이면 토요일은 휴식.
 - 축구한 평일은 식단 합계에 +300kcal.
 
+## 측정 반영 (자동 조정)
+
+측정일(10/17, W9·W18·W27·W36 토요일)에 턱걸이·푸시업·플랭크·로잉 10분 거리·허리둘레를 입력하면 다음 측정 전까지 처방이 조정됩니다.
+
+| 측정 | 조정 |
+|---|---|
+| 푸시업 | 푸시업 계열 횟수에 (측정값 ÷ 플랜 기준값) 배율 적용 |
+| 플랭크 | 플랭크·사이드 플랭크·할로우 시간에 같은 방식 배율 적용 |
+| 턱걸이 | 0개 네거티브 위주 / 1~4개 그대로 / 5~9개 +1회 / 10개 이상 +2회. 지난 측정보다 늘지 않으면 난도 유지 |
+| 로잉 10분 | 500m 스플릿 계산 → 존2·템포·강하게 목표 스플릿 표시 |
+
+- 배율은 0.6~1.2배로 제한합니다 (한 번에 최대 +20%).
+- 비워 둔 항목은 기본 처방 그대로입니다.
+
+**칼로리 자동 조정**: 지난 두 주의 주 평균 체중(각 주 2일 이상 기록)이 모두 목표보다 1kg 이상 높으면 −100kcal, 1.5kg 이상 낮으면 +100kcal. 설 브레이크 기간과 1~2주차는 제외.
+
 ## 파일 구조
 
 ```
@@ -32,11 +48,13 @@ css/style.css       스타일 (모바일은 파일 끝 @media 구역)
 js/util.js          날짜·숫자·DOM 공통 도구
 js/data.js          플랜 데이터: 단계·목표 체중·운동 설명·식단·생활습관 규칙
 js/plan.js          일정 규칙: 단계별 세션, 축구 반영, 디로드·측정 (순수 로직)
+js/adapt.js         측정 반영: 처방 배율·턱걸이 트랙·로잉 스플릿, 체중 기반 칼로리 조정
 js/store.js         기록 저장: 브라우저 + Supabase, 실패 시 재전송
 js/ui.js            화면 그리기
 js/main.js          탭·버튼 이벤트, 시작
 supabase.sql        테이블·보안 정책 생성 (처음 1회)
-migration-soccer.sql 축구 칼럼 추가 (기존 테이블에 1회)
+migration-soccer.sql  축구 칼럼 추가 (기존 테이블에 1회)
+migration-metrics.sql 측정 결과 칼럼 추가 (기존 테이블에 1회)
 ```
 
 스크립트는 `index.html` 하단에 위 순서대로 로드됩니다.
@@ -51,7 +69,9 @@ migration-soccer.sql 축구 칼럼 추가 (기존 테이블에 1회)
 | 식단 메뉴 | `js/data.js` → `BF`, `DIN`, `MENU` |
 | 생활습관 규칙 | `js/data.js` → `RULES` |
 | 단계별 세트·횟수 | `js/plan.js` → `PLAN` |
-| 요일 배치·축구 규칙 | `js/plan.js` → `plannedFor`, `sessionFor` |
+| 요일 배치·축구 규칙 | `js/plan.js` → `plannedFor`, `scheduledSession` |
+| 측정 항목·조정 기준 | `js/adapt.js` → `METRICS`, `EXPECTED`, `calibrationFor` |
+| 칼로리 자동 조정 기준 | `js/adapt.js` → `calorieAdjust` |
 | 시작일·종료일 | `js/util.js` → `START`, `END` |
 
 ## GitHub Pages로 배포
@@ -70,7 +90,7 @@ migration-soccer.sql 축구 칼럼 추가 (기존 테이블에 1회)
 ### Supabase 설정
 
 1. [supabase.com](https://supabase.com)에서 프로젝트 생성 (무료 플랜).
-2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`만 실행.
+2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`, `migration-metrics.sql`만 실행 (여러 번 실행해도 안전).
 3. **Authentication → Users → Add user** 로 내 계정 생성 (`Auto Confirm User` 체크).
 4. **Authentication → Sign In / Providers** 에서 `Allow new users to sign up` 끄기.
 5. **Project Settings → API Keys → Legacy API Keys** 의 `anon` key와 Project URL을 `config.js`에 입력.

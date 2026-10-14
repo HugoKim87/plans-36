@@ -48,71 +48,116 @@ let cur=TODAY<PREP0?PREP0:TODAY;   // 오늘 탭에서 보고 있는 날짜
 function renderToday(){
   const x=sessionFor(cur,Store.get), I=info(cur), L=Store.get(cur)||{};
   const PH=I.prep?PHASES[0]:I.after?PHASES[3]:phaseOf(I.week);
+  renderDayHeader(I,PH);
+  renderBanners(x,I);
+  renderSession(x);
+  renderMetricsForm(x,L);
+  renderLogButtons(L);
+  renderWeekCheck(I);
+  renderTodayDiet(I,PH,L);
+}
+
+function renderDayHeader(I,PH){
   const isDeloadWeek=!I.prep&&!I.after&&(I.week-(PH.n-1)*9)===9;
-  $("dayLabel").textContent=longDate(cur);
   let meta;
   if(I.prep) meta="준비 주간 · 10월 19일 월요일 시작";
   else if(I.after) meta="플랜 완료 후 · 유지기";
   else meta="W"+I.week+" · "+PH.n+"단계 "+PH.name+(isDeloadWeek?" · 디로드 주":"");
   if(cur===TODAY) meta="오늘 · "+meta;
+  $("dayLabel").textContent=longDate(cur);
   $("dayMeta").textContent=meta;
   $("prevDay").disabled=cur<=PREP0;
+}
 
+const BANNER={
+  test:["test","측정일","아래 '측정 결과 기록'에 입력하면 다음 측정 전까지의 운동이 그 기록에 맞게 조정됩니다. 체중은 오늘 기록 칸에 입력하세요."],
+  deload:["deload","디로드 주","세트를 줄였습니다. 70% 힘으로 자세를 다듬는 주입니다. 토요일에 체력 측정이 있습니다."],
+  brk:["break","설 연휴 다이어트 브레이크 (2/6~2/14)","유지 칼로리 약 2,500kcal까지 먹어도 됩니다. 명절 음식은 1인분씩, 단백질은 평소대로. 2/8(월)·2/9(화) 연휴엔 운동 대신 걷기 40분도 괜찮습니다. 체중이 0.5~1kg 오르는 건 수분과 음식 무게입니다."],
+  after:["info","36주 완료","4단계 마지막 주 운동을 유지하면서 식사는 1,800kcal에서 2주마다 100kcal씩 늘려 체중이 멈추는 지점을 찾으세요. 표준체중(약 69kg)을 이어서 노린다면 1단계 방식으로 다시 시작합니다."]
+};
+function renderBanners(x,I){
   const bn=$("dayBanners");bn.innerHTML="";
-  if(x.kind==="test") bn.appendChild(el("div",{class:"banner test"},"<b>측정일</b><span>기록한 숫자는 다음 측정과 비교합니다. 체중은 아래 기록 칸에도 입력하세요.</span>"));
-  if(x.deload&&x.kind!=="test") bn.appendChild(el("div",{class:"banner deload"},"<b>디로드 주</b><span>세트를 줄였습니다. 70% 힘으로 자세를 다듬는 주입니다. 토요일에 체력 측정이 있습니다.</span>"));
-  if(isBreak(cur)) bn.appendChild(el("div",{class:"banner break"},"<b>설 연휴 다이어트 브레이크 (2/6~2/14)</b><span>유지 칼로리 약 2,500kcal까지 먹어도 됩니다. 명절 음식은 1인분씩, 단백질은 평소대로. 2/8(월)·2/9(화) 연휴엔 운동 대신 걷기 40분도 괜찮습니다. 체중이 0.5~1kg 오르는 건 수분과 음식 무게입니다.</span>"));
-  if(I.after) bn.appendChild(el("div",{class:"banner info"},"<b>36주 완료</b><span>4단계 마지막 주 운동을 유지하면서 식사는 1,800kcal에서 2주마다 100kcal씩 늘려 체중이 멈추는 지점을 찾으세요. 표준체중(약 69kg)을 이어서 노린다면 1단계 방식으로 다시 시작합니다.</span>"));
+  const add=([cls,title,body])=>bn.appendChild(el("div",{class:"banner "+cls},"<b>"+esc(title)+"</b><span>"+esc(body)+"</span>"));
+  if(x.kind==="test") add(BANNER.test);
+  if(x.deload&&x.kind!=="test") add(BANNER.deload);
+  if(isBreak(cur)) add(BANNER.brk);
+  if(I.after) add(BANNER.after);
+  if(x.replaced) add(["info","축구로 대체","원래 계획: "+x.replaced+". 축구로 충분하니 따로 하지 않아도 됩니다."]);
+}
 
-  const sh=$("sessHead");
-  sh.innerHTML='<div class="row"><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span><span class="chip">'+minutesOf(x)+'</span></div><h2>'+esc(x.title)+'</h2><p class="muted">'+esc(x.sub)+'</p>';
+function renderSession(x){
+  const adapted=x.adapted&&x.adapted.notes.length
+    ?'<div class="adapted">'+esc(x.adapted.label)+' 측정 반영: '+esc(x.adapted.notes.join(" · "))+'</div>':"";
+  $("sessHead").innerHTML='<div class="row"><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span><span class="chip">'+minutesOf(x)+'</span></div><h2>'+esc(x.title)+'</h2><p class="muted">'+esc(x.sub)+'</p>'+adapted;
   // 저장 버튼 등으로 다시 그릴 때 펼쳐 둔 운동 설명이 접히지 않게 유지
   const box=$("sessBlocks");
   const open=box.dataset.date===cur?[...box.querySelectorAll("details")].map(d=>d.open):[];
   box.innerHTML=fullBlocks(x).map(blockRow).join("");
   box.dataset.date=cur;
   box.querySelectorAll("details").forEach((d,i)=>{if(open[i])d.open=true});
+}
 
+function renderMetricsForm(x,L){
+  const panel=$("metricsPanel"), show=x.kind==="test";
+  panel.hidden=!show;
+  if(!show) return;
+  // 입력 중인 칸은 다시 그리지 않음 (같은 날짜를 보고 있는 동안)
+  if(panel.dataset.date===cur&&panel.contains(document.activeElement)) return;
+  const m=L.metrics||{};
+  $("metricsFields").innerHTML=METRICS.map(f=>'<label class="mfield" for="m_'+f.key+'">'+esc(f.name)+' ('+f.unit+')<input id="m_'+f.key+'" type="number" inputmode="decimal" min="'+f.min+'" max="'+f.max+'" step="any" value="'+(typeof m[f.key]==="number"?m[f.key]:"")+'"></label>').join("");
+  panel.dataset.date=cur;
+}
+
+function renderLogButtons(L){
   const wi=$("wInput");
   if(document.activeElement!==wi) wi.value=typeof L.weight==="number"?L.weight.toFixed(1):"";
   const db=$("doneBtn");
   db.setAttribute("aria-pressed",L.done?"true":"false");
   db.textContent=L.done?"✓ 운동 완료":"운동 완료 표시";
-  const sb1=$("soccerBtn"), sb2=$("noSoccerBtn"), sh2=$("soccerHint");
   const isSun=dowOf(cur)===6;
+  const sb1=$("soccerBtn"), sb2=$("noSoccerBtn");
   sb1.setAttribute("aria-pressed",L.soccer===true?"true":"false");
-  sb2.hidden=!isSun;sb2.setAttribute("aria-pressed",L.soccer===false?"true":"false");
-  sb1.textContent=L.soccer===true?(isSun?"✓ 축구 다녀옴":"✓ 오늘 축구함"):(isSun?"⚽ 축구 다녀옴":"⚽ 오늘 축구함");
-  sb2.textContent=L.soccer===false?"✓ 이번 주 안 감":"이번 주 안 감";
-  sh2.textContent=isSun?"안 가는 날은 '이번 주 안 감'을 누르면 긴 로잉으로 바뀌고, 내일은 회복 대신 인터벌이 됩니다.":"주중에 축구를 했다면 누르세요. 오늘은 완료로 처리되고, 내일 하체·인터벌은 회복으로 바뀝니다.";
-  if(x.replaced) bn.appendChild(el("div",{class:"banner info"},"<b>축구로 대체</b><span>원래 계획: "+esc(x.replaced)+". 축구로 충분하니 따로 하지 않아도 됩니다.</span>"));
+  sb1.textContent=(L.soccer===true?"✓ ":"⚽ ")+(isSun?"축구 다녀옴":"오늘 축구함");
+  sb2.hidden=!isSun;
+  sb2.setAttribute("aria-pressed",L.soccer===false?"true":"false");
+  sb2.textContent=(L.soccer===false?"✓ ":"")+"이번 주 안 감";
+  $("soccerHint").textContent=isSun
+    ?"안 가는 날은 '이번 주 안 감'을 누르면 긴 로잉으로 바뀌고, 내일은 회복 대신 인터벌이 됩니다."
+    :"주중에 축구를 했다면 누르세요. 오늘은 완료로 처리되고, 내일 하체·인터벌은 회복으로 바뀝니다.";
+}
 
-  // week check
+function renderWeekCheck(I){
   const wc=$("weekCheck");
-  if(I.week>=1&&I.week<=36){
-    const t=TARGET[I.week], a=Store.weekAvg(I.week);
-    let state='<span class="chip">기록 전</span>';
-    if(a){const d=a.avg-t; state=d<=0?'<span class="chip good">목표 달성 중</span>':d<=1?'<span class="chip warn">목표 근접 (+'+d.toFixed(1)+')</span>':'<span class="chip bad">목표보다 +'+d.toFixed(1)+'kg</span>'}
-    const done=Store.weekDone(I.week);
-    wc.innerHTML='<h3>W'+I.week+' 점검</h3><div class="row between"><span>목표 주 평균</span><span class="num strong">'+t.toFixed(1)+' kg</span></div><div class="row between"><span>내 주 평균</span><span class="num strong">'+(a?a.avg.toFixed(1)+" kg <span class='muted small'>("+a.n+"일)</span>":"—")+'</span></div><div class="row between"><span>운동 완료</span><span class="num strong">'+done+' / 7일</span></div><div>'+state+'</div><p class="small muted">2주 연속 +1kg 이상이면 생활습관 탭 10번 규칙을 적용하세요.</p>';
-  }else if(I.prep){
-    wc.innerHTML='<h3>시작 전 점검</h3><p class="small">10/17(토) 기준 측정에서 체중·허리둘레·턱걸이·푸시업·플랭크·로잉 10분 거리를 기록해 두세요. 1주차 목표 주 평균은 <b class="num">'+TARGET[1].toFixed(1)+'kg</b>입니다.</p>';
-  }else{
-    wc.innerHTML='<h3>유지기</h3><p class="small">주 평균이 ±1kg 안에서 유지되면 성공입니다.</p>';
+  if(I.prep){
+    wc.innerHTML='<h3>시작 전 점검</h3><p class="small">10/17(토) 기준 측정에서 턱걸이·푸시업·플랭크·로잉 10분 거리·허리둘레를 재고 그날 화면의 측정 칸에 입력하세요. 1주차 목표 주 평균은 <b class="num">'+TARGET[1].toFixed(1)+'kg</b>입니다.</p>';
+    return;
   }
+  if(I.after){wc.innerHTML='<h3>유지기</h3><p class="small">주 평균이 ±1kg 안에서 유지되면 성공입니다.</p>';return}
+  const t=TARGET[I.week], a=Store.weekAvg(I.week);
+  let state='<span class="chip">기록 전</span>';
+  if(a){const d=a.avg-t; state=d<=0?'<span class="chip good">목표 달성 중</span>':d<=1?'<span class="chip warn">목표 근접 (+'+d.toFixed(1)+')</span>':'<span class="chip bad">목표보다 +'+d.toFixed(1)+'kg</span>'}
+  const row=(k,v)=>'<div class="row between"><span>'+k+'</span><span class="num strong">'+v+'</span></div>';
+  wc.innerHTML='<h3>W'+I.week+' 점검</h3>'
+    +row("목표 주 평균",t.toFixed(1)+" kg")
+    +row("내 주 평균",a?a.avg.toFixed(1)+" kg <span class='muted small'>("+a.n+"일)</span>":"—")
+    +row("운동 완료",Store.weekDone(I.week)+" / 7일")
+    +'<div>'+state+'</div><p class="small muted">2주 연속 목표보다 1kg 이상 높거나 1.5kg 이상 낮으면 식단 칼로리가 자동으로 조정됩니다.</p>';
+}
 
-  // diet
-  const P=PH, menu=MENU[I.dow], brk=isBreak(cur);
+function renderTodayDiet(I,P,L){
+  const menu=MENU[I.dow], brk=isBreak(cur);
   const base=menu.reduce((s,m)=>s+m.kcal,0), prot=menu.reduce((s,m)=>s+m.p,0);
   const soccerWeekday=L.soccer===true&&I.dow!==6, soccerSunday=I.dow===6&&L.soccer!==false;
-  const extra=soccerWeekday?300:0;
+  const auto=calorieAdjust(cur,Store.get);
   const notes=[brk?"아래 식단에 명절 음식 1~2끼를 더해도 됩니다.":(P.adj?P.n+"단계 조정: "+P.adjText+" (아래 합계에 반영)":"아래 식단 그대로 먹으면 됩니다.")];
+  if(auto) notes.push("자동 조정 "+(auto.kcal>0?"+":"")+auto.kcal+"kcal: "+auto.why+" → "+auto.how);
   if(soccerWeekday) notes.push("축구한 날: 저녁 밥 1/2공기 또는 바나나 1개 + 우유 추가 (+300kcal, 합계에 반영)");
   if(soccerSunday) notes.push("축구 가는 날: 아침에 바나나 1개 추가, 점심 자유식은 경기 후에.");
-  $("dietChip").textContent=brk?"브레이크 · 약 2,500kcal":P.n+"단계 · 하루 "+fmt(P.kcal)+"kcal";
+  const target=brk?2500:P.kcal+(auto?auto.kcal:0);
+  $("dietChip").textContent=brk?"브레이크 · 약 2,500kcal":P.n+"단계 · 하루 "+fmt(target)+"kcal"+(auto?" (조정)":"");
   $("dietNote").textContent=notes.join(" · ");
   const meals=menu.map(m=>'<div class="meal"><span class="t">'+esc(m.t)+'</span><div><div class="n">'+esc(m.name)+'</div><div class="i">'+esc(m.items)+'</div>'+(m.alt?'<div class="alt">'+esc(m.alt)+'</div>':'')+'</div><span class="k">'+r10(m.kcal)+'kcal · '+Math.round(m.p)+'g</span></div>').join("");
-  const tot=(brk?base:base-P.adj)+extra;
+  const tot=(brk?base:base-P.adj+(auto?auto.kcal:0))+(soccerWeekday?300:0);
   $("todayMeals").innerHTML=meals+'<div class="mealtotal"><span>합계</span><span class="num">약 '+fmt(r10(tot))+'kcal · 단백질 '+Math.round(prot)+'g</span></div>';
 }
 
@@ -184,6 +229,24 @@ function renderTarget(){
     rows+='<tr class="'+(w===I.week?"cur ":"")+(w>1&&P.from===w?"phase-start":"")+'"><td>W'+w+'</td><td>'+md(s)+'~'+md(addDays(s,6))+'</td><td>'+P.n+'단계'+note+'</td><td class="n">'+TARGET[w].toFixed(1)+'</td><td class="n">'+(TARGET[w-1]-TARGET[w]).toFixed(1)+'</td><td class="n">'+bmi(TARGET[w])+'</td><td class="n">'+(a?a.avg.toFixed(1):"—")+'</td><td class="n">'+(d==null?"—":(d>0?"+":"")+d.toFixed(1))+'</td></tr>';
   }
   $("targetTable").innerHTML=rows+"</tbody>";
+  renderFitTable();
+}
+
+function renderFitTable(){
+  const ms=TESTS.map(t=>(Store.get(t.date)||{}).metrics||null);
+  let h='<thead><tr><th>항목</th>'+TESTS.map(t=>'<th class="n">'+t.label+'<br><span class="muted">'+md(t.date)+'</span></th>').join("")+'<th class="n">변화</th></tr></thead><tbody>';
+  METRICS.forEach(f=>{
+    const vals=ms.map(m=>m&&typeof m[f.key]==="number"?m[f.key]:null);
+    const got=vals.filter(v=>v!=null);
+    let change="—",cls="";
+    if(got.length>=2){
+      const d=Math.round((got[got.length-1]-got[0])*10)/10;
+      change=(d>0?"+":"")+d+f.unit;
+      if(d!==0) cls=(d>0)!==!!f.lowerIsBetter?"up":"down";
+    }
+    h+='<tr><td>'+esc(f.name)+'</td>'+vals.map(v=>'<td class="n">'+(v==null?"—":v+f.unit)+'</td>').join("")+'<td class="n '+cls+'">'+change+'</td></tr>';
+  });
+  $("fitTable").innerHTML=h+"</tbody>";
 }
 
 /* ---------- library ---------- */
