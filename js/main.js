@@ -72,6 +72,42 @@ $("metricsPanel").addEventListener("submit",e=>{
   $("mStatus").textContent=Object.keys(out).length?"저장했습니다. 다음 날부터 처방에 반영됩니다.":"측정 기록을 비웠습니다.";
 });
 
+/* ---------- 컨디션·통증 ---------- */
+$("condBad").addEventListener("click",()=>{
+  const c=Object.assign({pain:[]},(Store.get(cur)||{}).cond);
+  Store.save(cur,{cond:{bad:!c.bad,pain:c.pain||[]}});
+});
+document.querySelectorAll("[data-pain]").forEach(btn=>btn.addEventListener("click",()=>{
+  const c=Object.assign({bad:false,pain:[]},(Store.get(cur)||{}).cond), p=btn.dataset.pain;
+  const pain=c.pain.includes(p)?c.pain.filter(x=>x!==p):c.pain.concat(p);
+  Store.save(cur,{cond:{bad:!!c.bad,pain}});
+}));
+
+/* ---------- 세트 체크·타이머 ---------- */
+$("sessBlocks").addEventListener("click",e=>{
+  const chip=e.target.closest("[data-set]"), tbtn=e.target.closest("[data-timer]");
+  if(chip){
+    const i=+chip.dataset.set, k=+chip.dataset.k, b=todayBlocks[i];
+    const total=b.circuit?b.rounds:b.sets, done=SetLog.get(cur,i);
+    const next=k<done?k:k+1;                     // 체크된 칸을 누르면 그 칸부터 해제
+    SetLog.set(cur,i,next);
+    renderSession(sessionFor(cur,Store.get));
+    if(next>done&&next<total){                  // 마지막 세트가 아니면 휴식 타이머
+      const sec=b.circuit?90:restSecondsFor(b.ex);
+      const name=(b.circuit?"서킷":((EX[b.ex]||{}).name||""))+" "+next+"/"+total+" 완료";
+      Timer.start([{label:"휴식",sec,kind:"easy"}],name,{rest:true});
+    }
+  }
+  if(tbtn){
+    const b=todayBlocks[+tbtn.dataset.timer];
+    Timer.start(parseRowTimer(b.text,b.note),"로잉 · "+b.text.replace(/\s*\(.*$/,""));
+  }
+});
+$("timerPause").addEventListener("click",()=>Timer.togglePause());
+$("timerNext").addEventListener("click",()=>Timer.next());
+$("timerPlus").addEventListener("click",()=>Timer.plus(15));
+$("timerStop").addEventListener("click",()=>Timer.stop());
+
 /* ---------- 로그인 ---------- */
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();
@@ -94,12 +130,28 @@ window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setT
 // 자정을 넘겨 다시 열었을 때 '오늘'을 갱신
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible") return;
+  Timer.resume();
   const prev=TODAY;
   if(refreshToday()){
     if(cur===prev) cur=todayOrStart();   // 어제 '오늘'을 보고 있었다면 새 오늘로
     renderAll();
   }
 });
+
+/* ---------- 홈 화면 앱(PWA)·연결 상태 ---------- */
+if("serviceWorker" in navigator&&(location.protocol==="https:"||["localhost","127.0.0.1"].includes(location.hostname))){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+let installPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e;$("installBtn").hidden=false});
+$("installBtn").addEventListener("click",async()=>{
+  if(!installPrompt) return;
+  installPrompt.prompt();
+  try{await installPrompt.userChoice}catch(e){}
+  installPrompt=null;$("installBtn").hidden=true;
+});
+window.addEventListener("online",()=>Store.retry());
+window.addEventListener("offline",()=>setStatus("오프라인입니다. 기록은 이 기기에 저장해 두었다가 연결되면 올립니다."));
 
 /* ---------- 시작 ---------- */
 Store.on("change",renderAll);

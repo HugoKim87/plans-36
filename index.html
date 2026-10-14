@@ -9,6 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0c6a6f">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="36주 플랜">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -69,6 +76,17 @@
         <button class="btn grow" id="noSoccerBtn" aria-pressed="false" hidden>이번 주 안 감</button>
       </div>
       <p class="small muted" id="soccerHint"></p>
+      <div class="cond">
+        <span class="small strong">오늘 몸 상태</span>
+        <div class="row" id="condRow">
+          <button class="btn btn-sm" type="button" id="condBad" aria-pressed="false">컨디션 나쁨</button>
+          <button class="btn btn-sm" type="button" data-pain="knee" aria-pressed="false">무릎 통증</button>
+          <button class="btn btn-sm" type="button" data-pain="ankle" aria-pressed="false">발목 통증</button>
+          <button class="btn btn-sm" type="button" data-pain="back" aria-pressed="false">허리 통증</button>
+          <button class="btn btn-sm" type="button" data-pain="shoulder" aria-pressed="false">어깨 통증</button>
+        </div>
+        <p class="small muted" id="condHint"></p>
+      </div>
       <p class="status" id="storeStatus">기록 불러오는 중…</p>
       <div id="authBox" hidden>
         <form id="authForm" class="wform" hidden>
@@ -218,18 +236,44 @@
 <section class="sheet" id="habit" role="tabpanel" aria-labelledby="tab-habit" hidden>
   <h2>생활습관 규칙</h2>
   <ol class="rules" id="rules"></ol>
+  <div class="panel prose" id="installPanel">
+    <h3>휴대폰 홈 화면에 앱처럼 추가</h3>
+    <ul>
+      <li><b>아이폰 (Safari)</b>: 아래 공유 버튼 → <b>홈 화면에 추가</b></li>
+      <li><b>안드로이드 (Chrome)</b>: 오른쪽 위 ⋮ → <b>홈 화면에 추가</b> 또는 <b>앱 설치</b></li>
+    </ul>
+    <p class="small muted">추가하면 주소창 없이 바로 열리고, 인터넷이 잠깐 끊겨도 화면이 열립니다. 끊긴 동안의 기록은 연결되면 자동으로 올라갑니다.</p>
+    <button class="btn primary" type="button" id="installBtn" hidden>홈 화면에 추가</button>
+  </div>
 </section>
 
 </div></main>
 
-<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 측정 반영 → 저장소 → 화면 → 시작 순서로 로드 -->
+<div id="timerBar" class="timerbar" hidden role="timer" aria-live="polite">
+  <div class="tprog"><i id="timerProg"></i></div>
+  <div class="tmain">
+    <div class="tinfo"><span id="timerLabel" class="tlabel"></span><span id="timerSub" class="tsub"></span></div>
+    <span id="timerTime" class="ttime num">0:00</span>
+  </div>
+  <div class="tbtns">
+    <button class="btn btn-sm" type="button" id="timerPlus" hidden>+15초</button>
+    <button class="btn btn-sm" type="button" id="timerPause">일시정지</button>
+    <button class="btn btn-sm" type="button" id="timerNext">다음 구간</button>
+    <button class="btn btn-sm" type="button" id="timerStop">종료</button>
+  </div>
+</div>
+
+<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 측정 반영 → 컨디션 반영 → 최종 일정 → 저장소 → 타이머 → 화면 → 시작 순서로 로드 -->
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/util.js"></script>
 <script src="js/data.js"></script>
 <script src="js/plan.js"></script>
 <script src="js/adapt.js"></script>
+<script src="js/condition.js"></script>
+<script src="js/session.js"></script>
 <script src="js/store.js"></script>
+<script src="js/timer.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

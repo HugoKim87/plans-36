@@ -121,14 +121,12 @@ function calibrationNotes(cal){
   return n;
 }
 
-/* ---------- 최종 일정 (화면은 이 함수만 사용) ---------- */
-function sessionFor(s,log=()=>undefined){
-  const x=scheduledSession(s,log);
+/* ---------- 측정 반영 단계 (session.js의 파이프라인에서 호출) ---------- */
+function applyCalibration(x,s,log){
   if(x.kind==="test"||x.kind==="soccer"||x.kind==="prep") return x;
   const cal=calibrationFor(s,log);
   if(!cal) return x;
-  const notes=calibrationNotes(cal);
-  return Object.assign({},x,{blocks:x.blocks.map(b=>adjustBlock(b,cal)),adapted:{label:cal.from.label,notes}});
+  return Object.assign({},x,{blocks:x.blocks.map(b=>adjustBlock(b,cal)),adapted:{label:cal.from.label,notes:calibrationNotes(cal)}});
 }
 
 /* ---------- 체중 기반 칼로리 조정 ---------- */

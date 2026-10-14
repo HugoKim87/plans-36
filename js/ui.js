@@ -15,7 +15,23 @@ function howHTML(id){
   }
   return h;
 }
-function blockRow(b,i){
+// 블록 아래 도구: 세트 체크(2세트 이상 근력·서킷) / 로잉 타이머
+function blockTools(b,i,date){
+  if(b.ex==="row"){
+    const segs=parseRowTimer(b.text,b.note);
+    return segs?'<div class="btools"><button class="tbtn" type="button" data-timer="'+i+'">▶ 타이머 '+mmss(totalSec(segs))+'</button></div>':"";
+  }
+  const n=b.circuit?b.rounds:b.sets;
+  if(!n||n<2) return "";
+  const done=SetLog.get(date,i);
+  let h='<div class="btools"><span class="small muted">'+(b.circuit?"라운드":"세트")+'</span>';
+  for(let k=0;k<n;k++) h+='<button class="setchip" type="button" data-set="'+i+'" data-k="'+k+'" aria-pressed="'+(k<done)+'" aria-label="'+(k+1)+'번째 완료">'+(k+1)+'</button>';
+  return h+'</div>';
+}
+function blockRow(b,i,date){
+  return '<div class="bitem">'+blockBody(b,i)+blockTools(b,i,date)+'</div>';
+}
+function blockBody(b,i){
   const n=String(i+1);
   if(b.plain){return '<div class="blk plain"><span class="bn num">'+n+'</span><span>'+esc(b.note)+'</span></div>'}
   if(b.circuit){
@@ -83,8 +99,13 @@ function renderBanners(x,I){
   if(isBreak(cur)) add(BANNER.brk);
   if(I.after) add(BANNER.after);
   if(x.replaced) add(["info","축구로 대체","원래 계획: "+x.replaced+". 축구로 충분하니 따로 하지 않아도 됩니다."]);
+  if(x.condition&&x.condition.bad) add(["break","컨디션 나쁨","오늘은 가벼운 로잉과 모빌리티만 합니다. 잠을 충분히 자고 물을 넉넉히 드세요."]);
+  if(x.condition&&x.condition.pain) add(["break",x.condition.pain.map(painName).join("·")+" 통증 반영",x.condition.changes.length?"바뀐 동작: "+x.condition.changes.join(", ")+". 통증이 없는 범위에서만 움직이세요.":"부담되는 동작이 없어 그대로 진행합니다. 통증이 없는 범위에서만 움직이세요."]);
+  const lasting=persistentPain(cur,Store.get);
+  if(lasting.length) add(["warn",lasting.map(painName).join("·")+" 통증이 4일 중 3일 이상","같은 부위 통증이 이어지고 있습니다. 운동 강도를 낮추고, 붓기·저림이 있거나 계속 아프면 병원(정형외과) 진료를 받아보세요."]);
 }
 
+let todayBlocks=[];   // 오늘 탭에 그려진 블록 (세트·타이머 버튼이 참조)
 function renderSession(x){
   const adapted=x.adapted&&x.adapted.notes.length
     ?'<div class="adapted">'+esc(x.adapted.label)+' 측정 반영: '+esc(x.adapted.notes.join(" · "))+'</div>':"";
@@ -92,7 +113,8 @@ function renderSession(x){
   // 저장 버튼 등으로 다시 그릴 때 펼쳐 둔 운동 설명이 접히지 않게 유지
   const box=$("sessBlocks");
   const open=box.dataset.date===cur?[...box.querySelectorAll("details")].map(d=>d.open):[];
-  box.innerHTML=fullBlocks(x).map(blockRow).join("");
+  todayBlocks=fullBlocks(x);
+  box.innerHTML=todayBlocks.map((b,i)=>blockRow(b,i,cur)).join("");
   box.dataset.date=cur;
   box.querySelectorAll("details").forEach((d,i)=>{if(open[i])d.open=true});
 }
@@ -124,6 +146,11 @@ function renderLogButtons(L){
   sb2.hidden=!isSun;
   sb2.setAttribute("aria-pressed",L.soccer===false?"true":"false");
   sb2.textContent=(L.soccer===false?"✓ ":"")+"이번 주 안 감";
+  const c=L.cond||{};
+  $("condBad").setAttribute("aria-pressed",c.bad?"true":"false");
+  document.querySelectorAll("[data-pain]").forEach(b=>b.setAttribute("aria-pressed",(c.pain||[]).includes(b.dataset.pain)?"true":"false"));
+  const yPain=((Store.get(addDays(cur,-1))||{}).cond||{}).pain||[];
+  $("condHint").textContent=yPain.length&&!(c.pain||[]).length?"어제 "+yPain.map(painName).join("·")+" 통증을 기록했어요. 오늘도 아프면 눌러주세요.":"누르면 오늘 운동이 바로 바뀝니다. 다시 누르면 해제됩니다.";
   $("soccerHint").textContent=isSun
     ?"안 가는 날은 '이번 주 안 감'을 누르면 긴 로잉으로 바뀌고, 내일은 회복 대신 인터벌이 됩니다."
     :"주중에 축구를 했다면 누르세요. 오늘은 완료로 처리되고, 내일 하체·인터벌은 회복으로 바뀝니다.";

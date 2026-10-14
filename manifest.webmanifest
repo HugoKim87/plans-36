@@ -1,0 +1,17 @@
+{
+  "name": "36주 홈트 감량 플랜",
+  "short_name": "36주 플랜",
+  "description": "로잉머신·푸시업바·턱걸이 홈트 36주 감량 플랜 — 일별 운동, 식단, 목표 체중, 기록",
+  "lang": "ko",
+  "start_url": "./#today",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef2f1",
+  "theme_color": "#0c6a6f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

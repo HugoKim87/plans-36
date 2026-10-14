@@ -51,3 +51,6 @@ alter table public.workout_log add column if not exists soccer boolean;
 
 -- 체력 측정 결과 칼럼 (턱걸이·푸시업·플랭크·로잉 10분·허리둘레)
 alter table public.workout_log add column if not exists metrics jsonb;
+
+-- 컨디션·통증 기록 칼럼
+alter table public.workout_log add column if not exists cond jsonb;

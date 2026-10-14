@@ -6,6 +6,9 @@
 ## 기능
 
 - **오늘**: 날짜별 운동(세트·횟수, 운동 이름을 누르면 방법과 영상 링크)과 식단, 체중·운동 완료·축구 기록, 측정일 결과 입력
+- **운동 타이머**: 세트 체크 → 휴식 카운트다운(턱걸이 2분·버티기 45초·그 외 75초), 로잉 인터벌·템포·피라미드·존2 구간 타이머 (소리·진동·화면 켜짐 유지)
+- **컨디션·통증**: 컨디션 나쁨 → 회복 세션, 무릎·발목·허리·어깨 통증별 동작 대체, 같은 부위 4일 중 3일 통증 시 진료 권고
+- **홈 화면 앱**: 휴대폰 홈 화면에 추가해 앱처럼 실행, 오프라인에서도 열림, 연결되면 밀린 기록 자동 전송
 - **주간표**: 1~36주차 요일별 운동, 축구한 날 ⚽ 표시
 - **목표**: 100kg → 78kg 주별·월별 목표 그래프와 표, 내 주 평균 비교, 체력 측정 기록 표
 - **운동법**: 로잉 자세, 턱걸이·푸시업·하체·코어 동작 설명과 유튜브 영상 검색 링크
@@ -39,6 +42,16 @@
 
 **칼로리 자동 조정**: 지난 두 주의 주 평균 체중(각 주 2일 이상 기록)이 모두 목표보다 1kg 이상 높으면 −100kcal, 1.5kg 이상 낮으면 +100kcal. 설 브레이크 기간과 1~2주차는 제외.
 
+## 컨디션·통증 규칙
+
+| 체크 | 바뀌는 것 |
+|---|---|
+| 컨디션 나쁨 | 그날 운동 → 가벼운 로잉 + 모빌리티 (축구·측정·휴식일은 그대로) |
+| 무릎 | 스쿼트·런지·월싯 → 글루트 브릿지, 로잉 주의 문구 |
+| 발목 | 카프레이즈 제외, 런지·싱글레그 RDL → 브릿지, 마운틴 클라이머 → 데드버그 |
+| 허리 | 싱글레그 RDL → 브릿지, 행잉 니레이즈·할로우·마운틴 → 데드버그·버드독 |
+| 어깨 | 푸시업·턱걸이·매달리기 제외, 플랭크 → 데드버그 |
+
 ## 파일 구조
 
 ```
@@ -49,12 +62,19 @@ js/util.js          날짜·숫자·DOM 공통 도구
 js/data.js          플랜 데이터: 단계·목표 체중·운동 설명·식단·생활습관 규칙
 js/plan.js          일정 규칙: 단계별 세션, 축구 반영, 디로드·측정 (순수 로직)
 js/adapt.js         측정 반영: 처방 배율·턱걸이 트랙·로잉 스플릿, 체중 기반 칼로리 조정
+js/condition.js     컨디션·통증 반영: 회복 전환, 부위별 동작 대체, 지속 통증 경고
+js/session.js       최종 일정 = 기본 일정 → 측정 반영 → 컨디션 반영
+js/timer.js         세트 체크·휴식 타이머, 로잉 구간 타이머
 js/store.js         기록 저장: 브라우저 + Supabase, 실패 시 재전송
 js/ui.js            화면 그리기
 js/main.js          탭·버튼 이벤트, 시작
 supabase.sql        테이블·보안 정책 생성 (처음 1회)
 migration-soccer.sql  축구 칼럼 추가 (기존 테이블에 1회)
 migration-metrics.sql 측정 결과 칼럼 추가 (기존 테이블에 1회)
+migration-condition.sql 컨디션·통증 칼럼 추가 (기존 테이블에 1회)
+manifest.webmanifest 홈 화면 앱 정보
+sw.js               오프라인용 서비스 워커 (파일 추가 시 VERSION 올리기)
+icons/              앱 아이콘
 ```
 
 스크립트는 `index.html` 하단에 위 순서대로 로드됩니다.
@@ -72,13 +92,21 @@ migration-metrics.sql 측정 결과 칼럼 추가 (기존 테이블에 1회)
 | 요일 배치·축구 규칙 | `js/plan.js` → `plannedFor`, `scheduledSession` |
 | 측정 항목·조정 기준 | `js/adapt.js` → `METRICS`, `EXPECTED`, `calibrationFor` |
 | 칼로리 자동 조정 기준 | `js/adapt.js` → `calorieAdjust` |
+| 통증별 대체 동작 | `js/condition.js` → `PAIN_SWAP`, `PAIN_CIRCUIT` |
+| 휴식 시간 | `js/timer.js` → `restSecondsFor` |
 | 시작일·종료일 | `js/util.js` → `START`, `END` |
 
 ## GitHub Pages로 배포
 
-1. 이 폴더의 파일과 `css`, `js` 폴더를 저장소 루트에 올립니다 (폴더 구조 그대로).
+1. 이 폴더의 파일과 `css`, `js`, `icons` 폴더를 저장소 루트에 올립니다 (폴더 구조 그대로).
 2. 저장소 **Settings → Pages**에서 Source `Deploy from a branch`, 브랜치 `main` / `/ (root)`.
 3. `https://<아이디>.github.io/<저장소명>/` 으로 접속합니다.
+
+## 홈 화면에 추가
+
+- **아이폰 (Safari)**: 공유 버튼 → 홈 화면에 추가
+- **안드로이드 (Chrome)**: ⋮ → 홈 화면에 추가 / 앱 설치
+- 새 버전을 올린 뒤에는 앱을 한 번 닫았다 열면 반영됩니다.
 
 ## 기록 저장 방식
 
@@ -90,7 +118,7 @@ migration-metrics.sql 측정 결과 칼럼 추가 (기존 테이블에 1회)
 ### Supabase 설정
 
 1. [supabase.com](https://supabase.com)에서 프로젝트 생성 (무료 플랜).
-2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`, `migration-metrics.sql`만 실행 (여러 번 실행해도 안전).
+2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`, `migration-metrics.sql`, `migration-condition.sql`만 실행 (여러 번 실행해도 안전).
 3. **Authentication → Users → Add user** 로 내 계정 생성 (`Auto Confirm User` 체크).
 4. **Authentication → Sign In / Providers** 에서 `Allow new users to sign up` 끄기.
 5. **Project Settings → API Keys → Legacy API Keys** 의 `anon` key와 Project URL을 `config.js`에 입력.

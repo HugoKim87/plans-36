@@ -108,7 +108,7 @@ function deloadify(sess){
 // (done은 사용자가 누른 값 그대로 저장하고, 축구는 화면·집계에서만 완료로 계산 → 축구 체크를 풀면 원래 상태로 돌아감)
 const isDone=v=>!!(v&&(v.done||v.soccer===true));
 
-// 측정 반영 전의 기본 일정 (측정 반영은 adapt.js의 sessionFor에서)
+// 측정·컨디션 반영 전의 기본 일정 (최종 일정은 session.js의 sessionFor)
 function scheduledSession(s,log=()=>undefined){
   const I=info(s);
   if(I.prep){

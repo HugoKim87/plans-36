@@ -4,7 +4,8 @@
  * - 모든 기록은 먼저 브라우저에 저장하고, 로그인 상태면 Supabase에도 올린다.
  * - 서버 저장이 실패한 날짜는 '미전송' 목록에 남겨 두고, 다음 접속 때 다시 올린다.
  *   (그래서 네트워크가 끊겨도 기록이 서버 값으로 덮어써지지 않는다)
- * - 기록 형태: { "2026-10-19": { weight, done, soccer: true|false|null, metrics: {pullup,pushup,plank,row10,waist} } }
+ * - 기록 형태: { "2026-10-19": { weight, done, soccer: true|false|null,
+ *                                metrics: {pullup,pushup,plank,row10,waist}, cond: {bad, pain:[...]} } }
  */
 const Store=(function(){
   const LKEY="plan36-log-v1", DIRTY_KEY="plan36-dirty-v1", TABLE="workout_log";
@@ -24,10 +25,12 @@ const Store=(function(){
     weight:typeof v.weight==="number"?v.weight:null,
     done:!!v.done,
     soccer:typeof v.soccer==="boolean"?v.soccer:null,
-    metrics:v.metrics&&Object.keys(v.metrics).length?v.metrics:null});
+    metrics:v.metrics&&Object.keys(v.metrics).length?v.metrics:null,
+    cond:v.cond&&(v.cond.bad||(v.cond.pain||[]).length)?v.cond:null});
   const fromRow=r=>({weight:r.weight==null?undefined:Number(r.weight),done:!!r.done,
     soccer:typeof r.soccer==="boolean"?r.soccer:undefined,
-    metrics:r.metrics&&typeof r.metrics==="object"?r.metrics:undefined});
+    metrics:r.metrics&&typeof r.metrics==="object"?r.metrics:undefined,
+    cond:r.cond&&typeof r.cond==="object"?r.cond:undefined});
 
   function setStatus(t){emit("status",t)}
 
@@ -41,7 +44,7 @@ const Store=(function(){
   }
 
   async function loadRemote(){
-    const {data,error}=await sb.from(TABLE).select("date,weight,done,soccer,metrics").order("date");
+    const {data,error}=await sb.from(TABLE).select("date,weight,done,soccer,metrics,cond").order("date");
     if(error){
       useLocal("서버 기록을 불러오지 못해 이 브라우저 기록을 보여줍니다: "+error.message);
       return;
@@ -86,6 +89,7 @@ const Store=(function(){
     const next=Object.assign({},logs[date]||{},patch);
     if(next.weight===undefined) delete next.weight;
     if(next.metrics&&!Object.keys(next.metrics).length) delete next.metrics;
+    if(next.cond&&!next.cond.bad&&!(next.cond.pain||[]).length) delete next.cond;
     logs=Object.assign({},logs,{[date]:next});
     writeJSON(LKEY,logs);
     emit("change");
@@ -95,8 +99,15 @@ const Store=(function(){
     }
   }
 
+  // 연결이 돌아왔을 때 못 올린 기록 다시 올리기
+  async function retry(){
+    if(mode!=="remote") return;
+    const pending=[...dirty()];
+    if(pending.length&&await pushDates(pending)) setStatus("연결이 복구되어 밀린 기록 "+pending.length+"건을 올렸습니다.");
+  }
+
   return {
-    init, save,
+    init, save, retry,
     get:d=>logs[d],
     isRemote:()=>mode==="remote",
     on:(ev,fn)=>listeners[ev].push(fn),
