@@ -192,6 +192,50 @@ td.wrap-cell{white-space:normal;min-width:220px}
 .rules li b{display:block;margin-bottom:2px}
 .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 @media (prefers-reduced-motion:no-preference){.tab,.btn,.day{transition:background .15s,border-color .15s}}
+/* ---- mobile ---- */
+@media (max-width:640px){
+  body{font-size:15px}
+  header .wrap{padding-block:16px 12px;gap:10px}
+  h1{font-size:26px}
+  h2{font-size:21px}
+  .hero-line{display:none}
+  .kpi{padding:9px 12px}
+  .kpi .v{font-size:17px}
+  .kpi .s{font-size:11px}
+  nav.tabs{position:fixed;top:auto;bottom:0;left:0;right:0;border-bottom:0;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);background:var(--surface)}
+  nav.tabs .wrap{padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+  .tabrow{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding-block:6px;overflow:visible}
+  .tab{padding:10px 0;border-radius:10px;font-size:13px;text-align:center}
+  main .wrap{padding-block:14px calc(84px + env(safe-area-inset-bottom,0px))}
+  section.sheet{gap:14px;scroll-margin-top:12px}
+  .panel{padding:14px;border-radius:12px}
+  .datenav{grid-template-columns:44px 1fr 44px;row-gap:6px}
+  .datenav .when{grid-column:2;grid-row:1;text-align:center}
+  .datenav #prevDay{grid-column:1;grid-row:1}
+  .datenav #nextDay{grid-column:3;grid-row:1}
+  .datenav #goToday{grid-column:1 / -1;grid-row:2;justify-self:center;padding:5px 16px;font-size:13px}
+  .datenav .when .d{font-size:22px}
+  .iconbtn{width:44px;height:44px}
+  .blk>summary{padding:13px 2px}
+  input,select,textarea{font-size:16px!important}
+  .wform input{width:100%;flex:1 1 140px}
+  .wform label{flex:1 0 100%}
+  #authForm input{width:100%!important;flex:1 1 100%}
+  #authForm button{flex:1 1 100%}
+  .btn{padding:11px 14px}
+  .weekbar{justify-content:space-between}
+  .weekbar .w{font-size:19px;flex:1;text-align:center}
+  .weekbar #thisWeek{flex:1 0 100%}
+  .days{grid-template-columns:1fr}
+  .milestones{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .ms{padding:8px 9px}
+  .ms .v{font-size:15px}
+  .lib{grid-template-columns:1fr}
+  .split{grid-template-columns:1fr}
+  .rules li{padding:12px 14px 12px 46px}
+  .rules li::before{left:12px}
+  th,td{padding:7px 9px;font-size:13px}
+}
 </style>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
@@ -210,10 +254,10 @@ td.wrap-cell{white-space:normal;min-width:220px}
   <div class="wrap"><div class="tabrow" role="tablist">
     <button class="tab" role="tab" data-tab="today" id="tab-today">오늘</button>
     <button class="tab" role="tab" data-tab="week" id="tab-week">주간표</button>
-    <button class="tab" role="tab" data-tab="target" id="tab-target">목표 체중</button>
+    <button class="tab" role="tab" data-tab="target" id="tab-target">목표</button>
     <button class="tab" role="tab" data-tab="howto" id="tab-howto">운동법</button>
     <button class="tab" role="tab" data-tab="diet" id="tab-diet">식단</button>
-    <button class="tab" role="tab" data-tab="habit" id="tab-habit">생활습관</button>
+    <button class="tab" role="tab" data-tab="habit" id="tab-habit">습관</button>
   </div></div>
 </nav>
 
@@ -405,7 +449,7 @@ const utc=s=>{const [y,m,d]=s.split("-").map(Number);return Date.UTC(y,m-1,d)};
 const diff=(a,b)=>Math.round((utc(b)-utc(a))/86400000);
 const dowOf=s=>(parse(s).getDay()+6)%7;
 const md=s=>{const d=parse(s);return (d.getMonth()+1)+"/"+d.getDate()};
-const longDate=s=>{const d=parse(s);return d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일 ("+KD[dowOf(s)]+")"};
+const longDate=s=>{const d=parse(s);return (d.getMonth()+1)+"월 "+d.getDate()+"일 ("+KD[dowOf(s)]+")"};
 const TODAY=ymd(new Date());
 
 function info(s){
@@ -854,12 +898,14 @@ function renderWeek(){
 
 /* ---------- target chart & table ---------- */
 function renderTarget(){
-  const W=640,H=270,L=46,Rr=18,Tp=16,Bt=40;
+  const bw=document.getElementById("chartBox").clientWidth||640;
+  const W=Math.max(320,Math.min(640,Math.round(bw))),H=W<480?240:270,L=40,Rr=14,Tp=16,Bt=40;
+  const xt=W<480?[0,12,24,36]:[0,9,18,27,36];
   const ymin=76,ymax=101;
   const x=w=>L+(W-L-Rr)*w/36, y=v=>Tp+(H-Tp-Bt)*(ymax-v)/(ymax-ymin);
   let g="";
   [80,85,90,95,100].forEach(v=>{g+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+v+'</text>'});
-  [0,9,18,27,36].forEach(w=>{const lab=w===0?"10/19":md(addDays(START,w*7-1));g+='<text x="'+x(w)+'" y="'+(H-Bt+18)+'" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">W'+w+'</text><text x="'+x(w)+'" y="'+(H-Bt+32)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+lab+'</text>'});
+  xt.forEach(w=>{const lab=w===0?"10/19":md(addDays(START,w*7-1));g+='<text x="'+x(w)+'" y="'+(H-Bt+18)+'" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">W'+w+'</text><text x="'+x(w)+'" y="'+(H-Bt+32)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+lab+'</text>'});
   const I=info(TODAY);
   if(I.week>=1&&I.week<=36){g+='<line x1="'+x(I.week)+'" x2="'+x(I.week)+'" y1="'+Tp+'" y2="'+(H-Bt)+'" stroke="var(--muted)" stroke-dasharray="3 4" stroke-width="1"/><text x="'+(x(I.week)+5)+'" y="'+(Tp+10)+'" font-size="11" fill="var(--ink-2)">이번 주</text>'}
   const tp=TARGET.map((v,i)=>(i?"L":"M")+x(i).toFixed(1)+" "+y(v).toFixed(1)).join(" ");
@@ -982,6 +1028,7 @@ document.getElementById("wSave").addEventListener("click",saveWeight);
 document.getElementById("wInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveWeight()}});
 document.getElementById("doneBtn").addEventListener("click",()=>{const L=logs[cur]||{};saveLog(cur,{done:!L.done})});
 
+let rzT=null;window.addEventListener("resize",()=>{clearTimeout(rzT);rzT=setTimeout(()=>{if(!document.getElementById("target").hidden)renderTarget()},200)});
 /* ---------- boot ---------- */
 renderLibrary();renderDiet();renderRules();
 const h=(location.hash||"").replace("#","");
