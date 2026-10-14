@@ -192,6 +192,10 @@ td.wrap-cell{white-space:normal;min-width:220px}
 .rules li b{display:block;margin-bottom:2px}
 .split{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 @media (prefers-reduced-motion:no-preference){.tab,.btn,.day{transition:background .15s,border-color .15s}}
+.vids{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.vid{display:inline-flex;align-items:center;gap:4px;padding:7px 12px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:13px;font-weight:700;text-decoration:none}
+.vid.alt{background:var(--surface);color:var(--accent);border:1px solid var(--line)}
+.vid:hover{filter:brightness(1.06)}
 /* ---- mobile ---- */
 @media (max-width:640px){
   body{font-size:15px}
@@ -488,75 +492,75 @@ const isBreak=s=>s>=BREAK_FROM&&s<=BREAK_TO;
 
 /* ---------- exercise library ---------- */
 const EX={
- row:{name:"로잉머신",group:"로잉",tg:"전신 유산소 · 다리 60% · 허리 20% · 팔 20%",
+ row:{yt:["로잉머신 자세 초보","rowing machine technique beginner"],name:"로잉머신",group:"로잉",tg:"전신 유산소 · 다리 60% · 허리 20% · 팔 20%",
   steps:["세팅: 발 스트랩을 발볼 가장 넓은 부분에 맞추고, 댐퍼(바람 조절 레버)는 3~5에 둡니다. 높을수록 좋은 운동이 아닙니다.","캐치(시작 자세): 팔은 쭉 펴고, 상체는 살짝 앞으로(시계 1시 방향), 정강이는 수직에 가깝게.","드라이브(당기기): 다리로 먼저 밀고 → 다리가 거의 펴지면 상체를 11시 방향까지 젖히고 → 마지막에 손잡이를 명치 아래로 당깁니다.","리커버리(돌아오기): 반대 순서. 팔을 먼저 펴고 → 상체를 1시로 숙이고 → 손이 무릎을 지난 뒤 무릎을 굽히며 앞으로 미끄러집니다.","리듬: 당기기 1박자, 돌아오기 2박자. 돌아올 때 서두르지 않습니다."],
   cues:["존2: SPM(분당 스트로크) 18~22, 말을 이어서 할 수 있는 강도(힘듦 4~5/10). 심박계가 있으면 약 110~130bpm.","인터벌 '강하게': SPM 24~28, 짧은 문장만 가능한 강도(7~8/10).","모니터의 500m당 시간(스플릿)을 적어 두면 주간 비교가 쉽습니다."],
   avoid:["팔부터 당기기","허리를 둥글게 말기","돌아올 때 무릎을 먼저 굽혀 손잡이가 무릎에 걸림","어깨를 으쓱 올리기"]},
- warmup:{name:"워밍업 루틴",group:"준비·회복",tg:"10분 · 근력일 시작 전",
+ warmup:{yt:["홈트 워밍업 동적 스트레칭 10분","dynamic warm up 10 minutes"],name:"워밍업 루틴",group:"준비·회복",tg:"10분 · 근력일 시작 전",
   steps:["로잉 5분 아주 가볍게 (SPM 18~20)","팔 돌리기 앞뒤 10회씩","고관절 돌리기 좌우 10회씩","캣카우 8회","맨몸 스쿼트 10회 가볍게","데드행 15초"]},
- cooldown:{name:"쿨다운",group:"준비·회복",tg:"5분 · 운동 마무리",
+ cooldown:{yt:["운동 후 쿨다운 스트레칭","cool down stretch after workout"],name:"쿨다운",group:"준비·회복",tg:"5분 · 운동 마무리",
   steps:["로잉 2분 아주 가볍게","그날 쓴 부위 스트레칭 20~30초씩 (가슴·등·허벅지 앞뒤·종아리)"]},
- mobility:{name:"모빌리티 루틴",group:"준비·회복",tg:"10분 · 목·토요일, 굳은 몸 풀기",
+ mobility:{yt:["모빌리티 루틴 고관절 흉추","full body mobility routine hips thoracic"],name:"모빌리티 루틴",group:"준비·회복",tg:"10분 · 목·토요일, 굳은 몸 풀기",
   steps:["캣카우 10회","오픈북: 옆으로 누워 위쪽 팔을 뒤로 열며 등 위쪽 회전, 8회/쪽","90/90 고관절 전환 8회","무릎 꿇고 고관절 앞쪽 스트레칭 30초/쪽","누워서 다리 들어 햄스트링 스트레칭 30초/쪽","문틀 가슴 스트레칭 30초","데드행 30초 (척추 늘리기)"]},
- walk:{name:"걷기",group:"준비·회복",tg:"휴식일 · 하루 8,000보",
+ walk:{yt:["올바른 걷기 자세","proper walking posture"],name:"걷기",group:"준비·회복",tg:"휴식일 · 하루 8,000보",
   steps:["편한 속도로 30~40분 (빠른 걸음보다 꾸준함)","식후 10분 걷기는 혈당과 식욕 관리에 도움이 됩니다."]},
- deadhang:{name:"데드행 (매달리기)",group:"당기기 · 턱걸이 바",tg:"악력 · 어깨 안정 · 턱걸이 기초",
+ deadhang:{yt:["데드행 매달리기 방법","dead hang how to"],name:"데드행 (매달리기)",group:"당기기 · 턱걸이 바",tg:"악력 · 어깨 안정 · 턱걸이 기초",
   steps:["어깨너비로 바를 위에서 잡습니다(오버그립).","발을 바닥에서 떼고 팔을 편 채 매달립니다.","어깨를 귀에서 살짝 멀어지게 내려 목이 묻히지 않게 합니다.","숨을 편하게 쉬며 정해진 시간 유지."],
   easier:"발끝을 의자에 걸쳐 체중 일부 덜기",harder:"시간 늘리기 → 한쪽 손으로 체중 옮기기"},
- scappull:{name:"스캐퓰러 풀업",group:"당기기 · 턱걸이 바",tg:"등 아래쪽 · 턱걸이의 첫 동작",
+ scappull:{yt:["스캐퓰러 풀업","scapular pull up"],name:"스캐퓰러 풀업",group:"당기기 · 턱걸이 바",tg:"등 아래쪽 · 턱걸이의 첫 동작",
   steps:["데드행 자세로 매달립니다.","팔꿈치를 굽히지 않고 날개뼈만 아래로 끌어내려 몸을 2~3cm 들어 올립니다.","1초 멈춘 뒤 천천히 내려옵니다."],
   cues:["팔로 당기지 않습니다. 가슴이 살짝 앞으로 나오는 느낌이 맞습니다."],easier:"발끝으로 체중 일부 지지"},
- negpull:{name:"네거티브 풀업",group:"당기기 · 턱걸이 바",tg:"광배·이두 · 내려오는 힘으로 턱걸이 만들기",
+ negpull:{yt:["네거티브 풀업 방법","negative pull up how to"],name:"네거티브 풀업",group:"당기기 · 턱걸이 바",tg:"광배·이두 · 내려오는 힘으로 턱걸이 만들기",
   steps:["바 아래에 튼튼한 의자나 발판을 둡니다. 체중을 견디는지 먼저 확인하세요.","의자를 밟고 올라가 턱이 바 위에 있는 상태로 바를 잡습니다.","발을 떼고 5초 동안 천천히 내려와 팔이 완전히 펴질 때까지 버팁니다.","다시 의자로 올라가 반복합니다."],
   cues:["처음 3초가 가장 중요합니다. 속도 조절이 안 되면 그 세트는 거기까지."],easier:"3초 하강부터",harder:"8초 하강, 중간 두 곳에서 1초씩 멈추기"},
- pullup:{name:"풀업 (턱걸이)",group:"당기기 · 턱걸이 바",tg:"광배 · 등 전체 · 이두",
+ pullup:{yt:["턱걸이 자세 초보","pull up form beginner"],name:"풀업 (턱걸이)",group:"당기기 · 턱걸이 바",tg:"광배 · 등 전체 · 이두",
   steps:["어깨너비보다 조금 넓게 오버그립으로 잡고 데드행.","날개뼈를 먼저 내리고(스캐퓰러 풀업) 이어서 팔꿈치를 옆구리 쪽으로 당깁니다.","가슴을 바 쪽으로 보내며 턱이 바를 넘을 때까지.","2초 동안 팔이 펴질 때까지 내려옵니다."],
   cues:["다리를 차거나 몸을 흔들지 않습니다.","0개인 날은 네거티브로 바꿔도 됩니다."],easier:"네거티브 풀업 · 친업",harder:"맨 아래와 맨 위에서 1초씩 정지"},
- chinup:{name:"친업 (언더그립)",group:"당기기 · 턱걸이 바",tg:"광배 · 이두 · 풀업보다 쉬움",
+ chinup:{yt:["친업 자세","chin up form"],name:"친업 (언더그립)",group:"당기기 · 턱걸이 바",tg:"광배 · 이두 · 풀업보다 쉬움",
   steps:["손바닥이 나를 보도록 어깨너비로 잡습니다.","풀업과 같은 순서로 날개뼈 → 팔꿈치 순으로 당깁니다.","턱이 바를 넘으면 2초 동안 내려옵니다."],easier:"네거티브 친업"},
- kneeraise:{name:"행잉 니레이즈",group:"당기기 · 턱걸이 바",tg:"아랫배 · 악력",
+ kneeraise:{yt:["행잉 니레이즈","hanging knee raise form"],name:"행잉 니레이즈",group:"당기기 · 턱걸이 바",tg:"아랫배 · 악력",
   steps:["바에 매달려 어깨를 살짝 내립니다.","무릎을 굽혀 가슴 쪽으로 끌어올리며 골반을 말아 올립니다.","2초 동안 천천히 내립니다."],
   cues:["몸이 흔들리면 멈춰서 흔들림이 잦아든 뒤 다음 회."],easier:"누워서 하는 리버스 크런치",harder:"다리를 더 높이"},
- pushup:{name:"푸시업바 푸시업",group:"밀기 · 푸시업 바",tg:"가슴 · 삼두 · 어깨 앞 · 코어",
+ pushup:{yt:["푸시업바 푸시업 자세","push up bars proper form"],name:"푸시업바 푸시업",group:"밀기 · 푸시업 바",tg:"가슴 · 삼두 · 어깨 앞 · 코어",
   steps:["받침대를 어깨너비보다 한 뼘 넓게 놓고 손목이 꺾이지 않게 일자로 잡습니다.","머리부터 발뒤꿈치까지 일직선. 배와 엉덩이에 힘을 줘 허리가 처지지 않게.","팔꿈치를 몸통에서 약 45도로 열며 2초 동안 가슴을 받침대 높이까지 내립니다.","1초에 밀어 올립니다."],
   cues:["받침대 덕분에 바닥보다 깊이 내려갈 수 있지만, 어깨 앞이 찝히면 깊이를 줄이세요.","'최대 개수'는 자세가 무너지기 직전까지."],easier:"무릎 대고 · 소파 팔걸이 짚고(인클라인)",harder:"3초 내리기 · 맨 아래 1초 정지"},
- closepush:{name:"좁은 푸시업",group:"밀기 · 푸시업 바",tg:"삼두 · 가슴 안쪽",
+ closepush:{yt:["좁은 푸시업 삼두","close grip push up form"],name:"좁은 푸시업",group:"밀기 · 푸시업 바",tg:"삼두 · 가슴 안쪽",
   steps:["받침대를 어깨너비보다 안쪽(주먹 하나 반 간격)으로 놓습니다.","팔꿈치를 옆구리에 붙인 채 뒤로 접으며 내려갑니다.","밀어 올릴 때 팔꿈치가 벌어지지 않게."],easier:"무릎 대고"},
- pikepush:{name:"파이크 푸시업",group:"밀기 · 푸시업 바",tg:"어깨 · 삼두",
+ pikepush:{yt:["파이크 푸시업","pike push up form"],name:"파이크 푸시업",group:"밀기 · 푸시업 바",tg:"어깨 · 삼두",
   steps:["엎드려뻗친 자세에서 엉덩이를 높이 들어 몸을 ㅅ자로 만듭니다.","팔꿈치를 굽혀 정수리가 양손 사이 앞쪽 바닥에 가까워지게 내려갑니다.","바닥을 밀어 처음 자세로 돌아옵니다."],easier:"엉덩이를 덜 들고 무릎 살짝 굽히기",harder:"발을 의자에 올리기"},
- declinepush:{name:"디클라인 푸시업",group:"밀기 · 푸시업 바",tg:"윗가슴 · 어깨",
+ declinepush:{yt:["디클라인 푸시업","decline push up form"],name:"디클라인 푸시업",group:"밀기 · 푸시업 바",tg:"윗가슴 · 어깨",
   steps:["발을 소파나 의자에 올리고 손은 푸시업바에 둡니다.","몸 일직선을 유지한 채 일반 푸시업과 같은 속도로."],cues:["허리가 꺾이기 쉬우니 배에 힘을 더 줍니다."],easier:"일반 푸시업"},
- boxsquat:{name:"박스 스쿼트",group:"하체",tg:"허벅지 앞 · 엉덩이 · 무릎 부담 적음",
+ boxsquat:{yt:["박스 스쿼트 맨몸","bodyweight box squat"],name:"박스 스쿼트",group:"하체",tg:"허벅지 앞 · 엉덩이 · 무릎 부담 적음",
   steps:["의자를 등지고 서서 발은 어깨너비, 발끝은 살짝 바깥.","엉덩이를 뒤로 빼며 의자에 앉듯 내려가 엉덩이가 살짝 닿으면","체중을 싣지 않고 바로 발 전체로 밀며 일어납니다."],cues:["무릎은 발끝 방향, 뒤꿈치는 바닥에 붙인 채."],harder:"맨몸 스쿼트"},
- airsquat:{name:"맨몸 스쿼트",group:"하체",tg:"허벅지 · 엉덩이",
+ airsquat:{yt:["맨몸 스쿼트 자세","bodyweight squat form"],name:"맨몸 스쿼트",group:"하체",tg:"허벅지 · 엉덩이",
   steps:["발은 어깨너비, 팔은 앞으로 뻗어 균형을 잡습니다.","엉덩이를 뒤·아래로 보내 허벅지가 바닥과 평행할 때까지.","발 전체로 바닥을 밀며 일어서고 마지막에 엉덩이를 조입니다."],cues:["'3초 내려가기'는 내려가는 동작을 3초에 걸쳐 합니다."],easier:"박스 스쿼트"},
- revlunge:{name:"리버스 런지",group:"하체",tg:"엉덩이 · 허벅지 · 앞 런지보다 무릎 부담 적음",
+ revlunge:{yt:["리버스 런지 자세","reverse lunge form"],name:"리버스 런지",group:"하체",tg:"엉덩이 · 허벅지 · 앞 런지보다 무릎 부담 적음",
   steps:["바르게 서서 한 발을 크게 뒤로 뻗습니다.","뒷무릎이 바닥에 닿기 직전까지 수직으로 내려갑니다.","앞발 뒤꿈치로 밀어 제자리로 돌아옵니다."],easier:"벽이나 의자 잡고",harder:"3초 내려가기"},
- bulgarian:{name:"불가리안 스플릿 스쿼트",group:"하체",tg:"엉덩이 · 허벅지 (한 다리)",
+ bulgarian:{yt:["불가리안 스플릿 스쿼트 맨몸","bulgarian split squat bodyweight form"],name:"불가리안 스플릿 스쿼트",group:"하체",tg:"엉덩이 · 허벅지 (한 다리)",
   steps:["소파나 의자 앞에서 한 걸음 반 떨어져 서고 뒷발 발등을 의자에 올립니다.","상체를 살짝 앞으로 기울인 채 앞다리로 수직으로 내려갑니다.","앞발 전체로 밀어 올라옵니다."],cues:["앞무릎이 안쪽으로 무너지지 않게."],easier:"리버스 런지"},
- bridge:{name:"글루트 브릿지",group:"하체",tg:"엉덩이 · 허리 보호",
+ bridge:{yt:["글루트 브릿지 자세","glute bridge form"],name:"글루트 브릿지",group:"하체",tg:"엉덩이 · 허리 보호",
   steps:["누워서 무릎을 세우고 발은 골반너비.","뒤꿈치로 바닥을 밀어 어깨-골반-무릎이 일직선이 될 때까지 엉덩이를 듭니다.","위에서 2초 엉덩이를 조이고 천천히 내립니다."],harder:"싱글레그 브릿지"},
- slbridge:{name:"싱글레그 글루트 브릿지",group:"하체",tg:"엉덩이 · 골반 안정",
+ slbridge:{yt:["싱글레그 글루트 브릿지","single leg glute bridge"],name:"싱글레그 글루트 브릿지",group:"하체",tg:"엉덩이 · 골반 안정",
   steps:["브릿지 자세에서 한 다리를 들어 무릎을 가슴 쪽으로.","바닥에 있는 다리 뒤꿈치로 밀어 엉덩이를 듭니다.","골반이 한쪽으로 기울지 않게 2초 정지."],easier:"양발 브릿지"},
- slrdl:{name:"싱글레그 루마니안 데드리프트",group:"하체",tg:"햄스트링 · 엉덩이 · 균형",
+ slrdl:{yt:["싱글레그 루마니안 데드리프트 맨몸","single leg romanian deadlift bodyweight"],name:"싱글레그 루마니안 데드리프트",group:"하체",tg:"햄스트링 · 엉덩이 · 균형",
   steps:["한 발로 서서 무릎은 살짝만 굽힙니다. 처음엔 한 손으로 벽을 짚어도 됩니다.","엉덩이를 뒤로 빼며 상체를 숙이고, 반대 다리는 뒤로 뻗어 몸을 T자에 가깝게.","허벅지 뒤가 당기면 엉덩이를 앞으로 밀며 올라옵니다."],cues:["허리는 끝까지 일자. 등이 굽기 전까지만 숙입니다."]},
- wallsit:{name:"월싯",group:"하체",tg:"허벅지 앞 지구력",
+ wallsit:{yt:["월싯 자세","wall sit form"],name:"월싯",group:"하체",tg:"허벅지 앞 지구력",
   steps:["벽에 등을 대고 미끄러져 내려가 무릎 90도.","무릎은 발목 위, 등 전체를 벽에 붙이고 버팁니다."],easier:"덜 내려가기"},
- calf:{name:"카프레이즈",group:"하체",tg:"종아리",
+ calf:{yt:["카프레이즈 자세","calf raise form"],name:"카프레이즈",group:"하체",tg:"종아리",
   steps:["계단 끝이나 바닥에서 벽을 살짝 짚고 섭니다.","발끝으로 최대한 올라가 1초 멈춥니다.","2초 동안 내려옵니다."]},
- plank:{name:"플랭크",group:"코어",tg:"복부 · 몸통 전체",
+ plank:{yt:["플랭크 올바른 자세","plank proper form"],name:"플랭크",group:"코어",tg:"복부 · 몸통 전체",
   steps:["팔꿈치를 어깨 바로 아래에 두고 엎드려 버팁니다.","머리-엉덩이-발뒤꿈치 일직선. 배꼽을 등 쪽으로 당기고 엉덩이를 조입니다.","숨은 참지 말고 짧게 계속 쉽니다."],easier:"무릎 대고",harder:"시간 늘리기"},
- sideplank:{name:"사이드 플랭크",group:"코어",tg:"옆구리 · 허리 안정",
+ sideplank:{yt:["사이드 플랭크 자세","side plank form"],name:"사이드 플랭크",group:"코어",tg:"옆구리 · 허리 안정",
   steps:["옆으로 누워 팔꿈치를 어깨 아래에 둡니다.","골반을 들어 머리부터 발까지 일직선.","골반이 처지면 그 세트는 끝."],easier:"아래쪽 무릎을 대고"},
- deadbug:{name:"데드버그",group:"코어",tg:"깊은 복근 · 허리 보호",
+ deadbug:{yt:["데드버그 운동","dead bug exercise"],name:"데드버그",group:"코어",tg:"깊은 복근 · 허리 보호",
   steps:["누워서 팔은 천장으로, 무릎은 90도로 들어 올립니다.","허리를 바닥에 붙인 채 오른팔과 왼다리를 천천히 뻗습니다.","돌아와서 반대쪽. 허리가 뜨면 뻗는 범위를 줄입니다."]},
- birddog:{name:"버드독",group:"코어",tg:"허리 · 엉덩이 안정",
+ birddog:{yt:["버드독 운동","bird dog exercise"],name:"버드독",group:"코어",tg:"허리 · 엉덩이 안정",
   steps:["네발 기기 자세 (손은 어깨 아래, 무릎은 골반 아래).","오른팔과 왼다리를 바닥과 평행하게 뻗고 2초 정지.","골반이 돌아가지 않게 천천히 교대."]},
- hollow:{name:"할로우 홀드",group:"코어",tg:"복부 전체 · 턱걸이·푸시업 몸통 힘",
+ hollow:{yt:["할로우 홀드","hollow body hold beginner"],name:"할로우 홀드",group:"코어",tg:"복부 전체 · 턱걸이·푸시업 몸통 힘",
   steps:["누워서 허리를 바닥에 꾹 붙입니다.","어깨와 다리를 바닥에서 띄워 바나나 모양으로 버팁니다.","허리가 뜨면 무릎을 굽혀 난도를 낮춥니다."],easier:"무릎 굽힌 할로우"},
- ytw:{name:"엎드려 Y-T-W 레이즈",group:"코어",tg:"등 위쪽 · 굽은 어깨 교정",
+ ytw:{yt:["YTW 운동 엎드려","prone Y T W raise"],name:"엎드려 Y-T-W 레이즈",group:"코어",tg:"등 위쪽 · 굽은 어깨 교정",
   steps:["엎드려 이마 밑에 수건을 둡니다.","Y: 팔을 머리 위로 Y자로 뻗고 엄지를 위로 한 채 들어 2초.","T: 팔을 옆으로 벌려 같은 방법으로.","W: 팔꿈치를 굽혀 W자로 만들고 날개뼈를 모으며 들기."],cues:["목에 힘이 들어가지 않게. 높이보다 날개뼈 모으기에 집중."]},
- mountain:{name:"마운틴 클라이머 (천천히)",group:"코어",tg:"코어 · 심폐",
+ mountain:{yt:["마운틴 클라이머 천천히","slow mountain climbers"],name:"마운틴 클라이머 (천천히)",group:"코어",tg:"코어 · 심폐",
   steps:["푸시업 자세에서 시작합니다.","한쪽 무릎을 가슴 쪽으로 당겼다가 제자리, 반대쪽.","좌우 1번씩을 1회로 셉니다. 엉덩이가 들리지 않게 통제된 속도로."],cues:["체중이 무거울 때 빠르게 하면 손목·허리 부담이 큽니다."]}
 };
 
@@ -778,13 +782,17 @@ function howHTML(id){
   if(x.avoid) h+='<div class="lbl">흔한 실수</div><ul>'+x.avoid.map(s=>"<li>"+esc(s)+"</li>").join("")+"</ul>";
   const ea=[];if(x.easier) ea.push("<b>쉽게</b> "+esc(x.easier));if(x.harder) ea.push("<b>어렵게</b> "+esc(x.harder));
   if(ea.length) h+="<p>"+ea.join(" · ")+"</p>";
+  if(x.yt){
+    const u=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+    h+='<p class="vids"><a class="vid" href="'+u(x.yt[0])+'" target="_blank" rel="noopener">▶ 영상 보기</a><a class="vid alt" href="'+u(x.yt[1])+'" target="_blank" rel="noopener">영어 영상</a></p>';
+  }
   return h;
 }
 function blockRow(b,i){
   const n=String(i+1);
   if(b.plain){return '<div class="blk plain"><span class="bn num">'+n+'</span><span>'+esc(b.note)+'</span></div>'}
   if(b.circuit){
-    return '<details class="blk"><summary><span class="bn num">'+n+'</span><span class="bname"><span class="nm">전신 서킷</span><small>'+esc(b.note||"")+'</small></span><span class="bdose">'+b.rounds+'라운드</span></summary><div class="how"><div class="lbl">한 라운드</div><ol>'+b.items.map(s=>"<li>"+esc(s)+"</li>").join("")+'</ol><p class="small">각 동작 방법은 운동법 탭에 있습니다.</p></div></details>';
+    return '<details class="blk"><summary><span class="bn num">'+n+'</span><span class="bname"><span class="nm">전신 서킷</span><small>'+esc(b.note||"")+'</small></span><span class="bdose">'+b.rounds+'라운드</span></summary><div class="how"><div class="lbl">한 라운드</div><ol>'+b.items.map(s=>"<li>"+esc(s)+"</li>").join("")+'</ol><p class="small">각 동작 방법과 영상은 운동법 탭에 있습니다.</p></div></details>';
   }
   const x=EX[b.ex]||{name:b.ex};
   const dose=b.sets?(b.sets>1?b.sets+"세트 × ":"")+b.reps:(b.text||"");
