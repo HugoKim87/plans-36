@@ -273,14 +273,29 @@ function renderFoodSheet(){
   $("fsList").innerHTML=list.length?list.map(f=>'<button type="button" class="frow" data-food="'+f.id+'"><span>'+esc(f.name)+'</span><span class="num muted">'+fmt(Math.round(f.kcal*fs.q))+'kcal · '+Math.round(f.p*fs.q)+'g</span></button>').join("")
     :'<p class="small muted">찾는 음식이 없어요. 아래 \'직접 입력\'으로 추가하세요.</p>';
 }
+// iOS는 키보드가 올라와도 화면 크기는 그대로이고 '보이는 영역'만 줄어듦 → 시트를 보이는 영역에 맞춤
+function fitSheetToViewport(){
+  const vv=window.visualViewport, el=$("foodSheet");
+  if(!vv||el.hidden) return;
+  el.style.setProperty("--vvh",Math.round(vv.height)+"px");
+  el.style.setProperty("--vvtop",Math.round(vv.offsetTop||0)+"px");
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener("resize",fitSheetToViewport);
+  window.visualViewport.addEventListener("scroll",fitSheetToViewport);
+}
 function openFoodSheet(slot){
   const catFor={"점심":0,"저녁":0,"__x":3};
   Object.assign(FoodSheet,{slot,q:1,query:"",cat:slot in catFor?catFor[slot]:2});
   $("fsSearch").value="";$("fcMsg").textContent="";
   renderFoodSheet();
   $("foodSheet").hidden=false;document.body.classList.add("fs-open");
+  fitSheetToViewport();
 }
-function closeFoodSheet(){$("foodSheet").hidden=true;document.body.classList.remove("fs-open")}
+function closeFoodSheet(){
+  if(document.activeElement&&$("foodSheet").contains(document.activeElement)) document.activeElement.blur();   // 키보드 닫기
+  $("foodSheet").hidden=true;document.body.classList.remove("fs-open");
+}
 
 /* ---------- 실측 소모량 (식단 탭) ---------- */
 function renderEnergyPanel(){

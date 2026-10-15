@@ -161,7 +161,7 @@ $("foodSheet").addEventListener("click",e=>{
   if(q){FoodSheet.q=+q.dataset.q;renderFoodSheet()}
   if(cat){FoodSheet.cat=+cat.dataset.cat;renderFoodSheet()}
 });
-$("fsSearch").addEventListener("input",e=>{FoodSheet.query=e.target.value.trim();renderFoodSheet()});
+$("fsSearch").addEventListener("input",e=>{FoodSheet.query=e.target.value.trim();renderFoodSheet();$("fsScroll").scrollTop=0});
 $("fsCustom").addEventListener("submit",e=>{
   e.preventDefault();
   const n=$("fcName").value.trim(), k=Number($("fcKcal").value), p=Number($("fcProt").value||0);
