@@ -4,7 +4,7 @@
  * - Supabase API 요청은 건드리지 않음 (기록 동기화는 앱이 직접 처리).
  * 파일을 추가·삭제하면 VERSION을 올리세요.
  */
-const VERSION="plan36-v3";
+const VERSION="plan36-v4";
 const SHELL=[
   "./","index.html","config.js","manifest.webmanifest","css/style.css",
   "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js",

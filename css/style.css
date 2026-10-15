@@ -207,6 +207,10 @@ td.wrap-cell{white-space:normal;min-width:220px}
 .lib{margin-top:10px;margin-bottom:12px}
 #soccerRow{gap:8px}
 
+/* 저장되어 잠긴 입력 */
+input:disabled{opacity:1;color:var(--ink);background:var(--sunk);border-color:transparent;-webkit-text-fill-color:var(--ink);cursor:default}
+#metricsPanel.locked .mfield input{font-weight:600}
+
 /* 측정 입력 */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .mfield{display:grid;gap:4px;font-size:13px;color:var(--ink-2)}

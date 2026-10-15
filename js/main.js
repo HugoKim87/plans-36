@@ -37,20 +37,32 @@ $("thisWeek").addEventListener("click",()=>{const I=info(TODAY);viewWeek=I.prep?
 
 /* ---------- 기록 ---------- */
 const setStatus=t=>{$("storeStatus").textContent=t};
+// 잠긴 기록을 수정 모드로 / 수정 취소
+function startEdit(kind,focusId){Editing[kind]=cur;renderToday();const el=$(focusId);if(el){el.focus();el.select&&el.select()}}
+function cancelEdit(kind){Editing[kind]=null;renderToday()}
+
 function saveWeight(){
+  const hasW=typeof (Store.get(cur)||{}).weight==="number";
+  if(isLocked("weight",hasW)) return startEdit("weight","wInput");
   const raw=$("wInput").value.trim();
   if(raw===""){
-    if(typeof (Store.get(cur)||{}).weight==="number"){Store.save(cur,{weight:undefined});setStatus("이 날의 체중 기록을 지웠습니다.")}
+    if(hasW){Editing.weight=null;Store.save(cur,{weight:undefined});setStatus("이 날의 체중 기록을 지웠습니다.")}
     else setStatus("체중을 입력해 주세요.");
     return;
   }
   const v=parseFloat(raw);
   if(!(v>=40&&v<=200)){setStatus("체중은 40~200 사이 숫자로 입력해 주세요.");return}
+  Editing.weight=null;
+  $("wInput").blur();
   Store.save(cur,{weight:Math.round(v*10)/10});
   setStatus(Store.isRemote()?"저장했습니다. 내 계정에 보관됩니다.":"저장했습니다. 이 브라우저에 보관됩니다.");
 }
 $("wSave").addEventListener("click",saveWeight);
-$("wInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveWeight()}});
+$("wCancel").addEventListener("click",()=>{cancelEdit("weight");setStatus("수정을 취소했습니다.")});
+$("wInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"){e.preventDefault();saveWeight()}
+  if(e.key==="Escape"&&Editing.weight===cur) cancelEdit("weight");
+});
 $("doneBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};if(L.soccer===true)return;Store.save(cur,{done:!L.done})});
 // 축구: true=다녀옴, false=일요일 안 감, null=기록 없음(다시 누르면 해제)
 $("soccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.save(cur,{soccer:L.soccer===true?null:true})});
@@ -59,6 +71,7 @@ $("noSoccerBtn").addEventListener("click",()=>{const L=Store.get(cur)||{};Store.
 /* ---------- 측정 결과 ---------- */
 $("metricsPanel").addEventListener("submit",e=>{
   e.preventDefault();
+  if(isLocked("metrics",!!(Store.get(cur)||{}).metrics)){$("mStatus").textContent="";return startEdit("metrics","m_pullup")}
   const out={}, bad=[];
   METRICS.forEach(f=>{
     const raw=$("m_"+f.key).value.trim();
@@ -68,9 +81,13 @@ $("metricsPanel").addEventListener("submit",e=>{
     else out[f.key]=v;
   });
   if(bad.length){$("mStatus").textContent="범위를 확인하세요: "+bad.join(", ");return}
+  Editing.metrics=null;
+  if(document.activeElement) document.activeElement.blur();
   Store.save(cur,{metrics:out});
   $("mStatus").textContent=Object.keys(out).length?"저장했습니다. 다음 날부터 처방에 반영됩니다.":"측정 기록을 비웠습니다.";
 });
+
+$("mCancel").addEventListener("click",()=>{cancelEdit("metrics");$("mStatus").textContent="수정을 취소했습니다."});
 
 /* ---------- 컨디션·통증 ---------- */
 $("condBad").addEventListener("click",()=>{
@@ -157,7 +174,7 @@ window.addEventListener("offline",()=>setStatus("오프라인입니다. 기록�
 Store.on("change",renderAll);
 Store.on("status",setStatus);
 Store.on("auth",renderAuth);
-renderLibrary();renderDiet();renderRules();
+renderPlanFacts();renderLibrary();renderDiet();renderRules();
 const startTab=(location.hash||"").replace("#","");
 showTab(TABS.includes(startTab)?startTab:"today");
 renderAll();

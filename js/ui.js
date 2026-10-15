@@ -44,6 +44,15 @@ function blockBody(b,i){
   return '<details class="blk"><summary><span class="bn num">'+n+'</span><span class="bname"><span class="nm">'+esc(nm)+'</span>'+sub+'</span><span class="bdose">'+esc(dose)+'</span></summary><div class="how">'+howHTML(b.ex)+'</div></details>';
 }
 
+/* ---------- 시작·최종 체중 문구 ---------- */
+function renderPlanFacts(){
+  const set=(cls,v)=>document.querySelectorAll(cls).forEach(e=>{e.textContent=v});
+  set(".js-start",START_WEIGHT.toFixed(1));
+  set(".js-start-date",START_WEIGHED);
+  set(".js-final",TARGET[36].toFixed(1));
+  set(".js-final-bmi",bmi(TARGET[36]));
+}
+
 /* ---------- KPIs ---------- */
 function renderKPIs(){
   const I=info(TODAY);
@@ -62,6 +71,7 @@ function renderKPIs(){
 /* ---------- today ---------- */
 let cur=TODAY<PREP0?PREP0:TODAY;   // 오늘 탭에서 보고 있는 날짜
 function renderToday(){
+  resetEditingOnDateChange();
   const x=sessionFor(cur,Store.get), I=info(cur), L=Store.get(cur)||{};
   const PH=I.prep?PHASES[0]:I.after?PHASES[3]:phaseOf(I.week);
   renderDayHeader(I,PH);
@@ -119,20 +129,42 @@ function renderSession(x){
   box.querySelectorAll("details").forEach((d,i)=>{if(open[i])d.open=true});
 }
 
+/* 저장된 기록은 잠그고 '수정'을 눌러야 바꿀 수 있게 함.
+ * Editing.weight / Editing.metrics = 수정 중인 날짜 (다른 날로 이동하면 자동으로 다시 잠김) */
+const Editing={weight:null,metrics:null};
+const isLocked=(kind,hasValue)=>hasValue&&Editing[kind]!==cur;
+let shownDate=null;
+// 보고 있는 날짜가 바뀌면 수정 상태를 모두 해제 (돌아와도 잠긴 상태로 보이게)
+function resetEditingOnDateChange(){
+  if(shownDate!==cur){Editing.weight=null;Editing.metrics=null;shownDate=cur}
+}
+
 function renderMetricsForm(x,L){
   const panel=$("metricsPanel"), show=x.kind==="test";
   panel.hidden=!show;
   if(!show) return;
-  // 입력 중인 칸은 다시 그리지 않음 (같은 날짜를 보고 있는 동안)
-  if(panel.dataset.date===cur&&panel.contains(document.activeElement)) return;
-  const m=L.metrics||{};
-  $("metricsFields").innerHTML=METRICS.map(f=>'<label class="mfield" for="m_'+f.key+'">'+esc(f.name)+' ('+f.unit+')<input id="m_'+f.key+'" type="number" inputmode="decimal" min="'+f.min+'" max="'+f.max+'" step="any" value="'+(typeof m[f.key]==="number"?m[f.key]:"")+'"></label>').join("");
+  const m=L.metrics||{}, locked=isLocked("metrics",!!L.metrics);
+  // 수정 중에 다른 이유로 다시 그려질 때 입력 중인 값은 지우지 않음
+  const keepTyping=panel.dataset.date===cur&&!locked&&panel.dataset.locked==="false";
+  if(!keepTyping){
+    $("metricsFields").innerHTML=METRICS.map(f=>'<label class="mfield" for="m_'+f.key+'">'+esc(f.name)+' ('+f.unit+')<input id="m_'+f.key+'" type="number" inputmode="decimal" min="'+f.min+'" max="'+f.max+'" step="any" value="'+(typeof m[f.key]==="number"?m[f.key]:"")+'"></label>').join("");
+  }
+  panel.querySelectorAll("#metricsFields input").forEach(i=>{i.disabled=locked});
+  panel.classList.toggle("locked",locked);
+  $("mSave").textContent=locked?"측정 결과 수정":"측정 결과 저장";
+  $("mSave").classList.toggle("primary",!locked);
+  $("mCancel").hidden=!(L.metrics&&!locked);
   panel.dataset.date=cur;
+  panel.dataset.locked=String(locked);
 }
 
 function renderLogButtons(L){
-  const wi=$("wInput");
-  if(document.activeElement!==wi) wi.value=typeof L.weight==="number"?L.weight.toFixed(1):"";
+  const wi=$("wInput"), hasW=typeof L.weight==="number", wLocked=isLocked("weight",hasW);
+  if(document.activeElement!==wi||wLocked) wi.value=hasW?L.weight.toFixed(1):"";
+  wi.disabled=wLocked;
+  $("wSave").textContent=wLocked?"수정":"저장";
+  $("wSave").classList.toggle("primary",!wLocked);
+  $("wCancel").hidden=!(hasW&&!wLocked);
   const db=$("doneBtn");
   const bySoccer=L.soccer===true;
   db.setAttribute("aria-pressed",isDone(L)?"true":"false");
@@ -221,10 +253,14 @@ function renderTarget(){
   const bw=$("chartBox").clientWidth||640;
   const W=Math.max(320,Math.min(640,Math.round(bw))),H=W<480?240:270,L=40,Rr=14,Tp=16,Bt=40;
   const xt=W<480?[0,12,24,36]:[0,9,18,27,36];
-  const ymin=76,ymax=101;
+  // 세로축: 목표 범위를 5kg 단위로 감싸기 (기록이 범위를 벗어나면 함께 넓힘)
+  const recs=[];for(let w=1;w<=36;w++){const a=Store.weekAvg(w);if(a)recs.push(a.avg)}
+  const lo=Math.min(TARGET[36],...recs), hi=Math.max(TARGET[0],...recs);
+  const ymin=Math.floor((lo-1)/5)*5, ymax=Math.ceil((hi+1)/5)*5;
+  const yticks=[];for(let v=ymin;v<=ymax;v+=5) yticks.push(v);
   const x=w=>L+(W-L-Rr)*w/36, y=v=>Tp+(H-Tp-Bt)*(ymax-v)/(ymax-ymin);
   let g="";
-  [80,85,90,95,100].forEach(v=>{g+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+v+'</text>'});
+  yticks.forEach(v=>{g+='<line x1="'+L+'" x2="'+(W-Rr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)" stroke-width="1"/><text x="'+(L-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+v+'</text>'});
   xt.forEach(w=>{const lab=w===0?"10/19":md(addDays(START,w*7-1));g+='<text x="'+x(w)+'" y="'+(H-Bt+18)+'" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono,monospace">W'+w+'</text><text x="'+x(w)+'" y="'+(H-Bt+32)+'" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">'+lab+'</text>'});
   const I=info(TODAY);
   if(I.week>=1&&I.week<=36){g+='<line x1="'+x(I.week)+'" x2="'+x(I.week)+'" y1="'+Tp+'" y2="'+(H-Bt)+'" stroke="var(--muted)" stroke-dasharray="3 4" stroke-width="1"/><text x="'+(x(I.week)+5)+'" y="'+(Tp+10)+'" font-size="11" fill="var(--ink-2)">이번 주</text>'}
@@ -236,7 +272,7 @@ function renderTarget(){
   pts.forEach(p=>{g+='<circle cx="'+x(p[0])+'" cy="'+y(Math.max(ymin,Math.min(ymax,p[1])))+'" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>'});
   for(let w=0;w<=36;w++){g+='<rect data-w="'+w+'" x="'+(x(w)-8)+'" y="'+Tp+'" width="16" height="'+(H-Tp-Bt)+'" fill="transparent"/>'}
   const box=$("chartBox");
-  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="주별 목표 체중 그래프: 100kg에서 36주차 '+TARGET[36]+'kg까지">'+g+'</svg><div class="tip" hidden></div>';
+  box.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="주별 목표 체중 그래프: '+START_WEIGHT+'kg에서 36주차 '+TARGET[36]+'kg까지">'+g+'</svg><div class="tip" hidden></div>';
   const tip=box.querySelector(".tip"), svg=box.querySelector("svg");
   svg.querySelectorAll("rect[data-w]").forEach(r=>{
     const show=()=>{const w=+r.dataset.w, a=Store.weekAvg(w);

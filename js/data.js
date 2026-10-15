@@ -13,8 +13,10 @@ const PHASES=[
    goal:"풀업 5회 세트, 피라미드 인터벌, 최종 측정"}
 ];
 const phaseOf=w=>w<1?null:PHASES[Math.min(3,Math.floor((Math.min(w,36)-1)/9))];
+// 시작 체중: 2026-10-15 아침 실측. 주별 목표는 이 값에서 주당 현재 체중의 0.55~0.85%씩 줄여 계산
+const START_WEIGHT=96.4, START_WEIGHED="10/15";
 const TARGET=(function(){
-  const t=[100];let w=100;
+  const t=[START_WEIGHT];let w=START_WEIGHT;
   for(let i=1;i<=36;i++){
     let r=i===1?0.012:i<=9?0.0085:i<=18?0.0075:i<=27?0.0065:0.0055;
     if(i===17) r=0;
