@@ -4,10 +4,10 @@
  * - Supabase API 요청은 건드리지 않음 (기록 동기화는 앱이 직접 처리).
  * 파일을 추가·삭제하면 VERSION을 올리세요.
  */
-const VERSION="plan36-v4";
+const VERSION="plan36-v5";
 const SHELL=[
   "./","index.html","config.js","manifest.webmanifest","css/style.css",
-  "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js",
+  "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js","js/diet.js",
   "js/store.js","js/timer.js","js/ui.js","js/main.js",
   "icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","icons/apple-touch-icon.png"
 ];

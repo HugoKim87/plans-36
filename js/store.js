@@ -5,7 +5,8 @@
  * - 서버 저장이 실패한 날짜는 '미전송' 목록에 남겨 두고, 다음 접속 때 다시 올린다.
  *   (그래서 네트워크가 끊겨도 기록이 서버 값으로 덮어써지지 않는다)
  * - 기록 형태: { "2026-10-19": { weight, done, soccer: true|false|null,
- *                                metrics: {pullup,pushup,plank,row10,waist}, cond: {bad, pain:[...]} } }
+ *                                metrics: {pullup,pushup,plank,row10,waist}, cond: {bad, pain:[...]},
+ *                                meals: {s:{끼니:기록}, x:[추가 음식]} } }   (식단 형태는 diet.js 참고)
  */
 const Store=(function(){
   const LKEY="plan36-log-v1", DIRTY_KEY="plan36-dirty-v1", TABLE="workout_log";
@@ -18,6 +19,7 @@ const Store=(function(){
   const readJSON=(k,def)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}};
   const writeJSON=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
   const dirty=()=>new Set(readJSON(DIRTY_KEY,[]));
+  const hasMeals=m=>!!(m&&(Object.keys(m.s||{}).length||(m.x||[]).length));
   const setDirty=set=>writeJSON(DIRTY_KEY,[...set]);
 
   /* --- 행 변환 --- */
@@ -26,11 +28,13 @@ const Store=(function(){
     done:!!v.done,
     soccer:typeof v.soccer==="boolean"?v.soccer:null,
     metrics:v.metrics&&Object.keys(v.metrics).length?v.metrics:null,
-    cond:v.cond&&(v.cond.bad||(v.cond.pain||[]).length)?v.cond:null});
+    cond:v.cond&&(v.cond.bad||(v.cond.pain||[]).length)?v.cond:null,
+    meals:hasMeals(v.meals)?v.meals:null});
   const fromRow=r=>({weight:r.weight==null?undefined:Number(r.weight),done:!!r.done,
     soccer:typeof r.soccer==="boolean"?r.soccer:undefined,
     metrics:r.metrics&&typeof r.metrics==="object"?r.metrics:undefined,
-    cond:r.cond&&typeof r.cond==="object"?r.cond:undefined});
+    cond:r.cond&&typeof r.cond==="object"?r.cond:undefined,
+    meals:r.meals&&typeof r.meals==="object"?r.meals:undefined});
 
   function setStatus(t){emit("status",t)}
 
@@ -44,7 +48,7 @@ const Store=(function(){
   }
 
   async function loadRemote(){
-    const {data,error}=await sb.from(TABLE).select("date,weight,done,soccer,metrics,cond").order("date");
+    const {data,error}=await sb.from(TABLE).select("date,weight,done,soccer,metrics,cond,meals").order("date");
     if(error){
       useLocal("서버 기록을 불러오지 못해 이 브라우저 기록을 보여줍니다: "+error.message);
       return;
@@ -90,6 +94,7 @@ const Store=(function(){
     if(next.weight===undefined) delete next.weight;
     if(next.metrics&&!Object.keys(next.metrics).length) delete next.metrics;
     if(next.cond&&!next.cond.bad&&!(next.cond.pain||[]).length) delete next.cond;
+    if(next.meals&&!hasMeals(next.meals)) delete next.meals;
     logs=Object.assign({},logs,{[date]:next});
     writeJSON(LKEY,logs);
     emit("change");

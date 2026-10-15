@@ -8,6 +8,8 @@
 - **오늘**: 날짜별 운동(세트·횟수, 운동 이름을 누르면 방법과 영상 링크)과 식단, 체중·운동 완료·축구 기록, 측정일 결과 입력
 - **운동 타이머**: 세트 체크 → 휴식 카운트다운(턱걸이 2분·버티기 45초·그 외 75초), 로잉 인터벌·템포·피라미드·존2 구간 타이머 (소리·진동·화면 켜짐 유지)
 - **컨디션·통증**: 컨디션 나쁨 → 회복 세션, 무릎·발목·허리·어깨 통증별 동작 대체, 같은 부위 4일 중 3일 통증 시 진료 권고
+- **식단 기록**: 끼니마다 계획대로 / 건너뜀 / 다르게 먹음, 음식 목록(98개) 검색·양 선택·직접 입력, 간식 추가, 오늘 먹은 칼로리·단백질
+- **실측 소모량 추정**: 식단·체중 기록 2주로 실제 하루 소모량을 역산해 목표 칼로리 자동 보정
 - **홈 화면 앱**: 휴대폰 홈 화면에 추가해 앱처럼 실행, 오프라인에서도 열림, 연결되면 밀린 기록 자동 전송
 - **주간표**: 1~36주차 요일별 운동, 축구한 날 ⚽ 표시
 - **목표**: 96.4kg → 75.2kg 주별·월별 목표 그래프와 표, 내 주 평균 비교, 체력 측정 기록 표
@@ -42,6 +44,16 @@
 
 **칼로리 자동 조정**: 지난 두 주의 주 평균 체중(각 주 2일 이상 기록)이 모두 목표보다 1kg 이상 높으면 −100kcal, 1.5kg 이상 낮으면 +100kcal. 설 브레이크 기간과 1~2주차는 제외.
 
+## 식단 기록과 칼로리 보정
+
+- **계획대로**: 그 순간의 계획 칼로리(단계·축구·보정 반영)를 그대로 기록합니다.
+- **다르게 먹음**: 음식 목록에서 고르거나 직접 입력합니다. 칼로리는 1인분 기준 근사치(±15~20%)입니다.
+- **실측 소모량**: 최근 14일 중 식단 전체 기록 10일·체중 기록 6일 이상이면
+  `소모량 = 평균 섭취 − 하루 체중 변화(kg) × 7,700` 으로 계산하고,
+  `권장 섭취 = 소모량 − 이번 주 목표 감량분`에 맞춰 식단을 ±250kcal 범위에서 조정합니다 (최소 1,500kcal).
+  1주차(수분 감소)와 설 브레이크 기간은 계산에서 뺍니다.
+- 실측 추정이 안 될 때는 체중 추이 기반 보정(2주 연속 목표 +1kg↑ → 견과 빼기 등)을 씁니다.
+
 ## 컨디션·통증 규칙
 
 | 체크 | 바뀌는 것 |
@@ -65,6 +77,7 @@ js/adapt.js         측정 반영: 처방 배율·턱걸이 트랙·로잉 스�
 js/condition.js     컨디션·통증 반영: 회복 전환, 부위별 동작 대체, 지속 통증 경고
 js/session.js       최종 일정 = 기본 일정 → 측정 반영 → 컨디션 반영
 js/timer.js         세트 체크·휴식 타이머, 로잉 구간 타이머
+js/diet.js          식단 계산: 끼니별 계획 칼로리, 섭취량, 실측 소모량 추정, 체중 기반 보정
 js/store.js         기록 저장: 브라우저 + Supabase, 실패 시 재전송
 js/ui.js            화면 그리기
 js/main.js          탭·버튼 이벤트, 시작
@@ -72,6 +85,7 @@ supabase.sql        테이블·보안 정책 생성 (처음 1회)
 migration-soccer.sql  축구 칼럼 추가 (기존 테이블에 1회)
 migration-metrics.sql 측정 결과 칼럼 추가 (기존 테이블에 1회)
 migration-condition.sql 컨디션·통증 칼럼 추가 (기존 테이블에 1회)
+migration-meals.sql 식단 기록 칼럼 추가 (기존 테이블에 1회)
 manifest.webmanifest 홈 화면 앱 정보
 sw.js               오프라인용 서비스 워커 (파일 추가 시 VERSION 올리기)
 icons/              앱 아이콘
@@ -91,7 +105,8 @@ icons/              앱 아이콘
 | 단계별 세트·횟수 | `js/plan.js` → `PLAN` |
 | 요일 배치·축구 규칙 | `js/plan.js` → `plannedFor`, `scheduledSession` |
 | 측정 항목·조정 기준 | `js/adapt.js` → `METRICS`, `EXPECTED`, `calibrationFor` |
-| 칼로리 자동 조정 기준 | `js/adapt.js` → `calorieAdjust` |
+| 칼로리 자동 조정 기준 | `js/diet.js` → `calorieAdjust`, `EST`, `PHASE_CUTS`, `SHIFT_DOWN`/`SHIFT_UP` |
+| 음식 목록·칼로리 | `js/data.js` → `FOODS` |
 | 통증별 대체 동작 | `js/condition.js` → `PAIN_SWAP`, `PAIN_CIRCUIT` |
 | 휴식 시간 | `js/timer.js` → `restSecondsFor` |
 | 시작일·종료일 | `js/util.js` → `START`, `END` |
@@ -122,7 +137,7 @@ icons/              앱 아이콘
 ### Supabase 설정
 
 1. [supabase.com](https://supabase.com)에서 프로젝트 생성 (무료 플랜).
-2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`, `migration-metrics.sql`, `migration-condition.sql`만 실행 (여러 번 실행해도 안전).
+2. **SQL Editor**에서 `supabase.sql` 실행. 이미 실행했다면 `migration-soccer.sql`, `migration-metrics.sql`, `migration-condition.sql`, `migration-meals.sql`만 실행 (여러 번 실행해도 안전).
 3. **Authentication → Users → Add user** 로 내 계정 생성 (`Auto Confirm User` 체크).
 4. **Authentication → Sign In / Providers** 에서 `Allow new users to sign up` 끄기.
 5. **Project Settings → API Keys → Legacy API Keys** 의 `anon` key와 Project URL을 `config.js`에 입력.

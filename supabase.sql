@@ -54,3 +54,6 @@ alter table public.workout_log add column if not exists metrics jsonb;
 
 -- 컨디션·통증 기록 칼럼
 alter table public.workout_log add column if not exists cond jsonb;
+
+-- 식단 기록 칼럼
+alter table public.workout_log add column if not exists meals jsonb;

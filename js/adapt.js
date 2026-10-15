@@ -128,22 +128,3 @@ function applyCalibration(x,s,log){
   if(!cal) return x;
   return Object.assign({},x,{blocks:x.blocks.map(b=>adjustBlock(b,cal)),adapted:{label:cal.from.label,notes:calibrationNotes(cal)}});
 }
-
-/* ---------- 체중 기반 칼로리 조정 ---------- */
-function weekAvgOf(log,w){
-  if(w<1||w>36) return null;
-  const s=weekStart(w);let sum=0,n=0;
-  for(let i=0;i<7;i++){const v=log(addDays(s,i));if(v&&typeof v.weight==="number"){sum+=v.weight;n++}}
-  return n?{avg:Math.round(sum/n*10)/10,n}:null;
-}
-// 지난 두 주의 주 평균(각 2일 이상 기록)이 모두 목표보다 1kg 이상 높으면 −100, 1.5kg 이상 낮으면 +100
-function calorieAdjust(date,log){
-  const I=info(date);
-  if(I.prep||I.after||I.week<3||isBreak(date)) return null;
-  const a=weekAvgOf(log,I.week-1), b=weekAvgOf(log,I.week-2);
-  if(!a||!b||a.n<2||b.n<2) return null;
-  const d1=a.avg-TARGET[I.week-1], d2=b.avg-TARGET[I.week-2];
-  if(d1>=1&&d2>=1) return {kcal:-100,why:"최근 2주 평균이 목표보다 1kg 이상 높음",how:"간식의 하루견과를 빼세요"};
-  if(d1<=-1.5&&d2<=-1.5) return {kcal:100,why:"최근 2주 평균이 목표보다 1.5kg 이상 낮음",how:"바나나 1개를 더하세요"};
-  return null;
-}

@@ -206,21 +206,96 @@ function renderWeekCheck(I){
     +'<div>'+state+'</div><p class="small muted">2주 연속 목표보다 1kg 이상 높거나 1.5kg 이상 낮으면 식단 칼로리가 자동으로 조정됩니다.</p>';
 }
 
+/* ---------- 오늘 식단 + 기록 ---------- */
+const sgn=n=>(n>0?"+":"")+n;
+const MSTAT=[["plan","✓ 계획대로"],["skip","건너뜀"],["custom","다르게 먹음"]];
+function itemChip(it,slot,idx){
+  const f=itemFood(it), q=+it.q||1;
+  return '<span class="mitem">'+esc(f.name)+(q!==1?' ×'+q:'')+' <span class="num">'+fmt(Math.round(itemKcal(it)))+'</span>'
+    +'<button type="button" class="mdel" data-mdel="'+idx+'" data-slot="'+esc(slot)+'" aria-label="'+esc(f.name)+' 빼기">×</button></span>';
+}
+function mealRow(s,e){
+  const adj=s.adj.map(a=>'<div class="madj">'+esc(a.text)+' <span class="num">('+sgn(a.k)+')</span></div>').join("");
+  const ctl=MSTAT.map(([m,label])=>'<button type="button" class="mbtn" data-mstat="'+m+'" data-slot="'+esc(s.t)+'" aria-pressed="'+(!!e&&e.m===m)+'">'+label+'</button>').join("");
+  let custom="";
+  if(e&&e.m==="custom"){
+    const items=e.items||[];
+    custom='<div class="mcustom">'+items.map((it,i)=>itemChip(it,s.t,i)).join("")
+      +'<button type="button" class="madd" data-madd="'+esc(s.t)+'">+ 음식 추가</button>'
+      +(items.length?'<span class="small muted num">먹은 양 '+fmt(entryIntake(e).k)+'kcal</span>':'')+'</div>';
+  }
+  return '<div class="meal'+(e?" logged":"")+'"><span class="t">'+esc(s.t)+'</span><div><div class="n">'+esc(s.name)+'</div><div class="i">'+esc(s.items)+'</div>'
+    +(s.alt?'<div class="alt">'+esc(s.alt)+'</div>':'')+adj+'</div><span class="k">'+fmt(r10(s.kcal))+'kcal · '+Math.round(s.p)+'g</span>'
+    +'<div class="mctl">'+ctl+'</div>'+custom+'</div>';
+}
+function extraRow(x){
+  const k=x.reduce((s,it)=>s+itemKcal(it),0);
+  return '<div class="meal extra"><span class="t">추가 간식·음료</span><div class="mcustom">'+x.map((it,i)=>itemChip(it,"__x",i)).join("")
+    +'<button type="button" class="madd" data-madd="__x">+ 간식·음료 추가</button></div><span class="k">'+(x.length?fmt(Math.round(k))+'kcal':'')+'</span></div>';
+}
+function renderIntakeSummary(plan,di,S){
+  const target=plan.target, eaten=di.kcal;
+  // 아직 기록 안 한 끼니는 계획대로 먹는다고 가정한 예상치
+  const projected=eaten+plan.slots.filter(s=>!S[s.t]).reduce((a,s)=>a+s.kcal,0);
+  const pct=Math.min(100,target?eaten/target*100:0), over=eaten>target+100;
+  $("intakeSum").innerHTML=!di.logged&&!eaten?'<p class="small muted">끼니마다 <b>계획대로 / 건너뜀 / 다르게 먹음</b>을 눌러 기록하면 오늘 먹은 칼로리를 계산합니다.</p>':
+    '<div class="row between"><span class="strong">먹은 양 <span class="num">'+fmt(eaten)+'</span> / '+fmt(r10(target))+'kcal</span><span class="small muted">단백질 <span class="num">'+di.protein+'</span> / '+Math.round(plan.protein)+'g · 기록 '+di.logged+'/'+di.slots+'끼</span></div>'
+    +'<div class="ibar'+(over?" over":"")+'"><i style="width:'+pct.toFixed(1)+'%"></i></div>'
+    +(di.complete?'<p class="small '+(over?"bad-t":"muted")+'">'+(over?"목표보다 약 "+fmt(r10(eaten-target))+"kcal 더 먹었어요. 내일 하루로 맞추려 하지 말고 평소대로 돌아가면 됩니다.":"오늘 기록 완료. 목표 대비 "+sgn(r10(eaten-target))+"kcal")+'</p>'
+      :'<p class="small muted">남은 끼니를 계획대로 먹으면 하루 약 '+fmt(r10(projected))+'kcal</p>');
+}
 function renderTodayDiet(I,P,L){
-  const menu=MENU[I.dow], brk=isBreak(cur);
-  const base=menu.reduce((s,m)=>s+m.kcal,0), prot=menu.reduce((s,m)=>s+m.p,0);
-  const soccerWeekday=L.soccer===true&&I.dow!==6, soccerSunday=I.dow===6&&L.soccer!==false;
-  const auto=calorieAdjust(cur,Store.get);
-  const notes=[brk?"아래 식단에 명절 음식 1~2끼를 더해도 됩니다.":(P.adj?P.n+"단계 조정: "+P.adjText+" (아래 합계에 반영)":"아래 식단 그대로 먹으면 됩니다.")];
-  if(auto) notes.push("자동 조정 "+(auto.kcal>0?"+":"")+auto.kcal+"kcal: "+auto.why+" → "+auto.how);
-  if(soccerWeekday) notes.push("축구한 날: 저녁 밥 1/2공기 또는 바나나 1개 + 우유 추가 (+300kcal, 합계에 반영)");
-  if(soccerSunday) notes.push("축구 가는 날: 아침에 바나나 1개 추가, 점심 자유식은 경기 후에.");
-  const target=brk?2500:P.kcal+(auto?auto.kcal:0);
-  $("dietChip").textContent=brk?"브레이크 · 약 2,500kcal":P.n+"단계 · 하루 "+fmt(target)+"kcal"+(auto?" (조정)":"");
+  const plan=planSlots(cur,Store.get), b=plan.basis, M=L.meals||{}, S=M.s||{};
+  const notes=[];
+  if(b.brk) notes.push("설 브레이크: 명절 음식 1~2끼를 더해 하루 약 2,500kcal까지 먹어도 됩니다.");
+  else if(P.n>1) notes.push(P.n+"단계 조정: "+P.adjText);
+  if(b.est) notes.push("실측 소모량 약 "+fmt(b.est.tdee)+"kcal 기준 권장 "+fmt(b.est.recommended)+"kcal → "+sgn(b.shift)+"kcal 보정");
+  if(b.auto) notes.push("체중 보정 "+sgn(b.shift)+"kcal: "+b.auto.why);
+  if(!notes.length) notes.push("아래 식단 그대로 먹으면 됩니다.");
+  $("dietChip").textContent=b.brk?"브레이크 · 약 2,500kcal":P.n+"단계 · 하루 약 "+fmt(r10(plan.total))+"kcal"+(b.est?" (실측 보정)":b.auto?" (체중 보정)":"");
   $("dietNote").textContent=notes.join(" · ");
-  const meals=menu.map(m=>'<div class="meal"><span class="t">'+esc(m.t)+'</span><div><div class="n">'+esc(m.name)+'</div><div class="i">'+esc(m.items)+'</div>'+(m.alt?'<div class="alt">'+esc(m.alt)+'</div>':'')+'</div><span class="k">'+r10(m.kcal)+'kcal · '+Math.round(m.p)+'g</span></div>').join("");
-  const tot=(brk?base:base-P.adj+(auto?auto.kcal:0))+(soccerWeekday?300:0);
-  $("todayMeals").innerHTML=meals+'<div class="mealtotal"><span>합계</span><span class="num">약 '+fmt(r10(tot))+'kcal · 단백질 '+Math.round(prot)+'g</span></div>';
+  $("todayMeals").innerHTML=plan.slots.map(s=>mealRow(s,S[s.t])).join("")+extraRow(M.x||[])
+    +'<div class="mealtotal"><span>계획 합계</span><span class="num">약 '+fmt(r10(plan.total))+'kcal · 단백질 '+Math.round(plan.protein)+'g</span></div>';
+  renderIntakeSummary(plan,dayIntake(cur,M),S);
+}
+
+/* ---------- 음식 선택 시트 ---------- */
+const FoodSheet={slot:null,q:1,cat:0,query:""};
+function renderFoodSheet(){
+  const fs=FoodSheet, isX=fs.slot==="__x";
+  $("fsTitle").textContent=isX?"간식·음료 추가":"음식 추가 · "+fs.slot;
+  document.querySelectorAll("#fsQty [data-q]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.q===fs.q)));
+  // 고정 음식 + 최근 자주 먹은 음식 (중복 제거, 최대 8개)
+  const pinned=(PINNED_FOODS[fs.slot]||[]).map(id=>FOOD_BY_ID[id]).filter(Boolean);
+  const freq=pinned.concat(frequentFoods(cur,Store.get).filter(f=>!pinned.includes(f))).slice(0,8);
+  $("fsFreq").innerHTML=!fs.query&&freq.length?'<span class="small muted">자주 먹는 것</span>'+freq.map(f=>'<button type="button" class="fchip" data-food="'+f.id+'">'+esc(f.name)+'</button>').join(""):"";
+  $("fsCats").innerHTML=fs.query?"":FOOD_CATS.map((c,i)=>'<button type="button" class="fcat" data-cat="'+i+'" aria-pressed="'+(i===fs.cat)+'">'+esc(c)+'</button>').join("");
+  const q=fs.query.replace(/\s/g,"");
+  const list=q?FOODS.filter(f=>f.name.replace(/\s/g,"").includes(q)):FOODS.filter(f=>f.cat===fs.cat);
+  $("fsList").innerHTML=list.length?list.map(f=>'<button type="button" class="frow" data-food="'+f.id+'"><span>'+esc(f.name)+'</span><span class="num muted">'+fmt(Math.round(f.kcal*fs.q))+'kcal · '+Math.round(f.p*fs.q)+'g</span></button>').join("")
+    :'<p class="small muted">찾는 음식이 없어요. 아래 \'직접 입력\'으로 추가하세요.</p>';
+}
+function openFoodSheet(slot){
+  const catFor={"점심":0,"저녁":0,"__x":3};
+  Object.assign(FoodSheet,{slot,q:1,query:"",cat:slot in catFor?catFor[slot]:2});
+  $("fsSearch").value="";$("fcMsg").textContent="";
+  renderFoodSheet();
+  $("foodSheet").hidden=false;document.body.classList.add("fs-open");
+}
+function closeFoodSheet(){$("foodSheet").hidden=true;document.body.classList.remove("fs-open")}
+
+/* ---------- 실측 소모량 (식단 탭) ---------- */
+function renderEnergyPanel(){
+  const e=energyEstimate(TODAY,Store.get), box=$("energyPanel");
+  if(e.ready){
+    box.innerHTML='<h3>내 실제 하루 소모량</h3><p class="big num">약 '+fmt(e.tdee)+'kcal</p>'
+      +'<p class="small muted">최근 14일 평균 섭취 '+fmt(e.intake)+'kcal · 체중 변화 '+(e.weekChange>0?"+":"")+e.weekChange.toFixed(2)+'kg/주</p>'
+      +(e.recommended?'<p class="small">이번 주 목표 감량 '+e.weeklyLoss.toFixed(1)+'kg에 맞춘 권장 섭취는 <b class="num">'+fmt(e.recommended)+'kcal</b>입니다. 오늘 식단에 자동 반영됩니다 (한 번에 ±250kcal까지).</p>':'');
+  }else{
+    box.innerHTML='<h3>내 실제 하루 소모량</h3><p class="small">'+esc(e.why)+'</p>'
+      +'<p class="small muted num">최근 14일 기록: 식단 전체 '+e.intakeDays+'/'+EST.minIntake+'일 · 체중 '+e.weightDays+'/'+EST.minWeights+'일</p>'
+      +'<p class="small muted">기록이 모이면 평균 섭취량과 체중 변화로 실제 소모량을 역산해 목표 칼로리를 맞춥니다. 그전까지는 체중 추이로 ±100kcal씩 조정합니다.</p>';
+  }
 }
 
 /* ---------- week ---------- */
@@ -241,7 +316,7 @@ function renderWeek(){
       return esc(nm)+" <span class='num'>"+esc(dose)+"</span>";
     });
     const card=el("button",{class:"day"+(d===TODAY?" today":""),type:"button"});
-    card.innerHTML='<div class="dh"><span class="dd">'+KD[i]+' '+md(d)+'</span><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span></div><div><b>'+esc(x.title)+'</b> <span class="muted small">'+esc(x.sub)+'</span></div><ul>'+items.map(t=>"<li>"+t+"</li>").join("")+'</ul>'+(L.soccer===true?'<span class="done">⚽ 축구</span>':"")+(isDone(L)&&L.soccer!==true?'<span class="done">✓ 완료</span>':"")+(typeof L.weight==="number"?'<span class="small muted">체중 <span class="num">'+L.weight.toFixed(1)+'</span>kg</span>':"");
+    card.innerHTML='<div class="dh"><span class="dd">'+KD[i]+' '+md(d)+'</span><span class="chip '+x.kind+'">'+KIND[x.kind]+'</span></div><div><b>'+esc(x.title)+'</b> <span class="muted small">'+esc(x.sub)+'</span></div><ul>'+items.map(t=>"<li>"+t+"</li>").join("")+'</ul>'+(L.soccer===true?'<span class="done">⚽ 축구</span>':"")+(isDone(L)&&L.soccer!==true?'<span class="done">✓ 완료</span>':"")+(typeof L.weight==="number"?'<span class="small muted">체중 <span class="num">'+L.weight.toFixed(1)+'</span>kg</span>':"")+(L.meals&&dayIntake(d,L.meals).complete?'<span class="small muted">섭취 <span class="num">'+fmt(dayIntake(d,L.meals).kcal)+'</span>kcal</span>':"");
     card.addEventListener("click",()=>{cur=d;showTab("today");renderToday();window.scrollTo(0,0)});
     box.appendChild(card);
   }

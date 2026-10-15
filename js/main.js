@@ -11,6 +11,7 @@ function showTab(id){
   });
   if(id==="target") renderTarget();
   if(id==="week") renderWeek();
+  if(id==="diet") renderEnergyPanel();
   try{history.replaceState(null,"","#"+id)}catch(e){}
 }
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
@@ -24,6 +25,7 @@ function renderAll(){
   renderKPIs();renderToday();
   if(!$("week").hidden) renderWeek();
   if(!$("target").hidden) renderTarget();
+  if(!$("diet").hidden) renderEnergyPanel();
 }
 
 /* ---------- 날짜·주 이동 ---------- */
@@ -124,6 +126,51 @@ $("timerPause").addEventListener("click",()=>Timer.togglePause());
 $("timerNext").addEventListener("click",()=>Timer.next());
 $("timerPlus").addEventListener("click",()=>Timer.plus(15));
 $("timerStop").addEventListener("click",()=>Timer.stop());
+
+/* ---------- 식단 기록 ---------- */
+// 오늘 보고 있는 날의 식단 기록 사본 (저장 전 수정용)
+const mealsCopy=()=>JSON.parse(JSON.stringify((Store.get(cur)||{}).meals||{s:{},x:[]}));
+function saveMeals(M){M.s=M.s||{};M.x=M.x||[];Store.save(cur,{meals:M})}
+$("todayMeals").addEventListener("click",e=>{
+  const st=e.target.closest("[data-mstat]"), del=e.target.closest("[data-mdel]"), add=e.target.closest("[data-madd]");
+  if(st){
+    const slot=st.dataset.slot, m=st.dataset.mstat, M=mealsCopy(), cur_=M.s[slot];
+    if(cur_&&cur_.m===m){delete M.s[slot];return saveMeals(M)}          // 같은 버튼을 다시 누르면 해제
+    if(m==="plan"){const p=planSlots(cur,Store.get).slots.find(x=>x.t===slot);M.s[slot]={m:"plan",k:Math.round(p.kcal),p:Math.round(p.p)}}
+    if(m==="skip") M.s[slot]={m:"skip"};
+    if(m==="custom"){M.s[slot]={m:"custom",items:[]};saveMeals(M);return openFoodSheet(slot)}
+    return saveMeals(M);
+  }
+  if(del){
+    const slot=del.dataset.slot, i=+del.dataset.mdel, M=mealsCopy();
+    if(slot==="__x") M.x.splice(i,1); else if(M.s[slot]&&M.s[slot].items) M.s[slot].items.splice(i,1);
+    return saveMeals(M);
+  }
+  if(add) openFoodSheet(add.dataset.madd);
+});
+function addFood(item){
+  const slot=FoodSheet.slot, M=mealsCopy();
+  if(slot==="__x") M.x.push(item);
+  else{if(!M.s[slot]||M.s[slot].m!=="custom") M.s[slot]={m:"custom",items:[]};M.s[slot].items.push(item)}
+  saveMeals(M);closeFoodSheet();
+}
+$("foodSheet").addEventListener("click",e=>{
+  if(e.target.closest("[data-fsclose]")) return closeFoodSheet();
+  const food=e.target.closest("[data-food]"), q=e.target.closest("[data-q]"), cat=e.target.closest("[data-cat]");
+  if(food) return addFood({f:food.dataset.food,q:FoodSheet.q});
+  if(q){FoodSheet.q=+q.dataset.q;renderFoodSheet()}
+  if(cat){FoodSheet.cat=+cat.dataset.cat;renderFoodSheet()}
+});
+$("fsSearch").addEventListener("input",e=>{FoodSheet.query=e.target.value.trim();renderFoodSheet()});
+$("fsCustom").addEventListener("submit",e=>{
+  e.preventDefault();
+  const n=$("fcName").value.trim(), k=Number($("fcKcal").value), p=Number($("fcProt").value||0);
+  if(!n||!Number.isFinite(k)||k<0||k>3000){$("fcMsg").textContent="이름과 칼로리(0~3,000)를 입력하세요.";return}
+  if(!Number.isFinite(p)||p<0||p>200){$("fcMsg").textContent="단백질은 0~200g으로 입력하세요.";return}
+  addFood({f:"custom",n:n.slice(0,40),k:Math.round(k),p:Math.round(p*10)/10,q:FoodSheet.q});
+  ["fcName","fcKcal","fcProt"].forEach(id=>{$(id).value=""});
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("foodSheet").hidden) closeFoodSheet()});
 
 /* ---------- 로그인 ---------- */
 $("authForm").addEventListener("submit",async e=>{

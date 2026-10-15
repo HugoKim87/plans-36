@@ -104,6 +104,7 @@
   <div class="panel">
     <div class="row between mb-s"><h3>오늘 식단</h3><span class="chip" id="dietChip"></span></div>
     <div id="dietNote" class="small muted mb-s"></div>
+    <div id="intakeSum" class="intake"></div>
     <div class="meals" id="todayMeals"></div>
   </div>
 </section>
@@ -180,6 +181,7 @@
     <h2>식단 기준</h2>
     <p>39세·177cm·<span class="js-start">—</span>kg 남성의 하루 소모량은 운동 포함 약 2,700kcal로 추정됩니다. 여기서 하루 700kcal 안팎을 덜 먹고, 단백질은 하루 150g 이상으로 고정해 근육을 지키며 지방을 뺍니다.</p>
   </div>
+  <div class="panel stack-sm" id="energyPanel"></div>
   <div class="tbl-wrap"><table id="phaseTable"></table></div>
   <div>
     <h3 class="mb-s">요일별 식단 (1단계 기준)</h3>
@@ -250,6 +252,30 @@
 
 </div></main>
 
+<div id="foodSheet" class="fs-wrap" hidden>
+  <div class="fs-back" data-fsclose></div>
+  <div class="fsheet" role="dialog" aria-modal="true" aria-labelledby="fsTitle">
+    <div class="fs-head"><h3 id="fsTitle">음식 추가</h3><button class="btn btn-sm" type="button" data-fsclose>닫기</button></div>
+    <input id="fsSearch" class="fs-search" type="search" placeholder="음식 검색 (예: 제육, 라떼, 치킨)" autocomplete="off">
+    <div class="fs-qty" id="fsQty"><span class="small muted">양</span>
+      <button class="btn btn-sm" type="button" data-q="0.5">½</button><button class="btn btn-sm" type="button" data-q="1" aria-pressed="true">1인분</button><button class="btn btn-sm" type="button" data-q="1.5">1½</button><button class="btn btn-sm" type="button" data-q="2">2인분</button>
+    </div>
+    <div id="fsFreq" class="fs-freq"></div>
+    <div id="fsCats" class="fs-cats"></div>
+    <div id="fsList" class="fs-list"></div>
+    <details class="fs-custom">
+      <summary>목록에 없으면 직접 입력</summary>
+      <form id="fsCustom" class="fs-cform" novalidate>
+        <input id="fcName" type="text" placeholder="음식 이름" maxlength="40">
+        <input id="fcKcal" type="number" inputmode="numeric" placeholder="kcal" min="0" max="3000">
+        <input id="fcProt" type="number" inputmode="decimal" placeholder="단백질 g (선택)" min="0" max="200">
+        <button class="btn primary" type="submit">추가</button>
+        <span class="status" id="fcMsg"></span>
+      </form>
+    </details>
+  </div>
+</div>
+
 <div id="timerBar" class="timerbar" hidden role="timer" aria-live="polite">
   <div class="tprog"><i id="timerProg"></i></div>
   <div class="tmain">
@@ -264,7 +290,7 @@
   </div>
 </div>
 
-<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 측정 반영 → 컨디션 반영 → 최종 일정 → 저장소 → 타이머 → 화면 → 시작 순서로 로드 -->
+<!-- 설정 → Supabase 라이브러리 → 데이터 → 일정 규칙 → 측정 반영 → 컨디션 반영 → 최종 일정 → 식단 계산 → 저장소 → 타이머 → 화면 → 시작 순서로 로드 -->
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/util.js"></script>
@@ -273,6 +299,7 @@
 <script src="js/adapt.js"></script>
 <script src="js/condition.js"></script>
 <script src="js/session.js"></script>
+<script src="js/diet.js"></script>
 <script src="js/store.js"></script>
 <script src="js/timer.js"></script>
 <script src="js/ui.js"></script>
