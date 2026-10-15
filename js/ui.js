@@ -265,9 +265,7 @@ function renderFoodSheet(){
   const fs=FoodSheet, isX=fs.slot==="__x";
   $("fsTitle").textContent=isX?"간식·음료 추가":"음식 추가 · "+fs.slot;
   document.querySelectorAll("#fsQty [data-q]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.q===fs.q)));
-  // 고정 음식 + 최근 자주 먹은 음식 (중복 제거, 최대 8개)
-  const pinned=(PINNED_FOODS[fs.slot]||[]).map(id=>FOOD_BY_ID[id]).filter(Boolean);
-  const freq=pinned.concat(frequentFoods(cur,Store.get).filter(f=>!pinned.includes(f))).slice(0,8);
+  const freq=(PINNED_FOODS[fs.slot]||[]).map(id=>FOOD_BY_ID[id]).filter(Boolean);
   $("fsFreq").innerHTML=!fs.query&&freq.length?'<span class="small muted">자주 먹는 것</span>'+freq.map(f=>'<button type="button" class="fchip" data-food="'+f.id+'">'+esc(f.name)+'</button>').join(""):"";
   $("fsCats").innerHTML=fs.query?"":FOOD_CATS.map((c,i)=>'<button type="button" class="fcat" data-cat="'+i+'" aria-pressed="'+(i===fs.cat)+'">'+esc(c)+'</button>').join("");
   const q=fs.query.replace(/\s/g,"");

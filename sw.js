@@ -5,7 +5,7 @@
  * - 설치 때 파일을 하나씩 저장 → 일부 파일을 못 받아도 나머지는 오프라인에서 열림
  * 파일을 추가·삭제하거나 index.html의 라이브러리 주소를 바꾸면 VERSION과 아래 목록을 함께 고치세요.
  */
-const VERSION="plan36-v6";
+const VERSION="plan36-v9";
 const SHELL=[
   "./","index.html","config.js","manifest.webmanifest","css/style.css",
   "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js","js/diet.js",

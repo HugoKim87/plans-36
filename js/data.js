@@ -203,5 +203,5 @@ const FOODS=[
  ["smoothie","스무디",300,3,4],["bubbletea","버블티",400,2,4],["sportsdrink","이온음료 500ml",125,0,4]
 ].map(([id,name,kcal,p,cat])=>({id,name,kcal,p,cat}));
 const FOOD_BY_ID=Object.fromEntries(FOODS.map(f=>[f.id,f]));
-// 끼니별로 음식 선택 창 맨 위에 고정할 음식 (자주 먹는 것보다 먼저)
+// 끼니별 '자주 먹는 것' (음식 선택 창 맨 위). 여기 없는 끼니는 분류 목록만 보임
 const PINNED_FOODS={"아침":["paperbag"]};

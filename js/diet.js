@@ -143,14 +143,3 @@ function planSlots(date,log=()=>undefined){
   const total=slots.reduce((s,x)=>s+x.kcal,0), protein=slots.reduce((s,x)=>s+x.p,0);
   return {slots,total:Math.round(total),protein:Math.round(protein),basis,target:brk?2500:Math.round(total)};
 }
-
-/* 자주 먹은 음식 (최근 60일, 많이 고른 순) */
-function frequentFoods(date,log,limit=8){
-  const count={};
-  for(let i=0;i<60;i++){
-    const m=(log(addDays(date,-i))||{}).meals;if(!m) continue;
-    const items=[].concat(...Object.values(m.s||{}).map(e=>e&&e.m==="custom"?e.items||[]:[]),m.x||[]);
-    items.forEach(it=>{if(it.f!=="custom"&&FOOD_BY_ID[it.f])count[it.f]=(count[it.f]||0)+1});
-  }
-  return Object.keys(count).sort((a,b)=>count[b]-count[a]).slice(0,limit).map(id=>FOOD_BY_ID[id]);
-}
