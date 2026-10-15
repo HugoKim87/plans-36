@@ -57,7 +57,7 @@ function saveWeight(){
   Editing.weight=null;
   $("wInput").blur();
   Store.save(cur,{weight:Math.round(v*10)/10});
-  setStatus(Store.isRemote()?"저장했습니다. 내 계정에 보관됩니다.":"저장했습니다. 이 브라우저에 보관됩니다.");
+  setStatus(Store.isRemote()?"저장했습니다. 내 계정에 보관됩니다.":Store.hasPending()?"저장했습니다. 이 기기에 두었다가 연결되면 올립니다.":"저장했습니다. 이 브라우저에 보관됩니다.");
 }
 $("wSave").addEventListener("click",saveWeight);
 $("wCancel").addEventListener("click",()=>{cancelEdit("weight");setStatus("수정을 취소했습니다.")});
@@ -195,6 +195,7 @@ window.addEventListener("resize",()=>{clearTimeout(resizeTimer);resizeTimer=setT
 document.addEventListener("visibilitychange",()=>{
   if(document.visibilityState!=="visible") return;
   Timer.resume();
+  Store.sync();
   const prev=TODAY;
   if(refreshToday()){
     if(cur===prev) cur=todayOrStart();   // 어제 '오늘'을 보고 있었다면 새 오늘로
@@ -214,8 +215,10 @@ $("installBtn").addEventListener("click",async()=>{
   try{await installPrompt.userChoice}catch(e){}
   installPrompt=null;$("installBtn").hidden=true;
 });
-window.addEventListener("online",()=>Store.retry());
-window.addEventListener("offline",()=>setStatus("오프라인입니다. 기록은 이 기기에 저장해 두었다가 연결되면 올립니다."));
+// 연결이 돌아오면·앱을 다시 볼 때·밀린 기록이 있으면 30초마다 서버와 맞추기
+window.addEventListener("online",()=>Store.sync());
+window.addEventListener("offline",()=>setStatus("오프라인입니다. 기록은 이 기기에 저장해 두었다가 연결되면 자동으로 올립니다."));
+setInterval(()=>{if(Store.hasPending())Store.sync()},30000);
 
 /* ---------- 시작 ---------- */
 Store.on("change",renderAll);
