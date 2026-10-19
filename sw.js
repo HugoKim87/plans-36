@@ -5,12 +5,12 @@
  * - 설치 때 파일을 하나씩 저장 → 일부 파일을 못 받아도 나머지는 오프라인에서 열림
  * 파일을 추가·삭제하거나 index.html의 라이브러리 주소를 바꾸면 VERSION과 아래 목록을 함께 고치세요.
  */
-const VERSION="plan36-v10";
+const VERSION="plan36-v12";
 const SHELL=[
   "./","index.html","config.js","manifest.webmanifest","css/style.css",
-  "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js","js/diet.js",
+  "js/util.js","js/data.js","js/plan.js","js/adapt.js","js/condition.js","js/session.js","js/diet.js","js/foods.js",
   "js/store.js","js/timer.js","js/ui.js","js/main.js",
-  "icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","icons/apple-touch-icon.png"
+  "data/foods-kr.json","icons/icon-192.png","icons/icon-512.png","icons/icon-maskable-512.png","icons/apple-touch-icon.png"
 ];
 const EXTERNAL=["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"];
 const NET_TIMEOUT=3000;

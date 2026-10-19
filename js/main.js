@@ -156,11 +156,23 @@ function addFood(item){
 }
 $("foodSheet").addEventListener("click",e=>{
   if(e.target.closest("[data-fsclose]")) return closeFoodSheet();
-  const food=e.target.closest("[data-food]"), q=e.target.closest("[data-q]"), cat=e.target.closest("[data-cat]");
+  const food=e.target.closest("[data-food]"), row=e.target.closest("[data-ri]"), q=e.target.closest("[data-q]"), cat=e.target.closest("[data-cat]");
   if(food) return addFood({f:food.dataset.food,q:FoodSheet.q});
+  if(row){const r=FoodSheet.results[+row.dataset.ri];if(r) return addFood(foodItem(r,FoodSheet.q))}
+  if(e.target.closest("[data-online]")) return searchOnline();
   if(q){FoodSheet.q=+q.dataset.q;renderFoodSheet()}
   if(cat){FoodSheet.cat=+cat.dataset.cat;renderFoodSheet()}
 });
+// 식약처 상품(가공식품) 온라인 검색: Supabase 서버 함수 food-search 를 거쳐 공공데이터포털 API 호출
+async function searchOnline(){
+  const on=FoodSheet.online, q=FoodSheet.query;
+  on.status="loading";renderFoodSheet();
+  const {data,error}=await Store.callFunction("food-search",{q});
+  if(on.q!==q) return;                                     // 그사이 검색어가 바뀌었으면 버림
+  if(error){on.status=error.code||"server";return renderFoodSheet()}
+  on.items=dedupeOnline((data&&Array.isArray(data.items)?data.items:[]).filter(x=>x&&x.name&&Number.isFinite(+x.kcal)).map(x=>({name:String(x.name),brand:String(x.brand||""),serv:String(x.serv||""),kcal:+x.kcal,p:+x.p||0})));
+  on.status="done";renderFoodSheet();
+}
 $("fsSearch").addEventListener("input",e=>{FoodSheet.query=e.target.value.trim();renderFoodSheet();$("fsScroll").scrollTop=0});
 $("fsCustom").addEventListener("submit",e=>{
   e.preventDefault();

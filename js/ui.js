@@ -260,18 +260,51 @@ function renderTodayDiet(I,P,L){
 }
 
 /* ---------- 음식 선택 시트 ---------- */
-const FoodSheet={slot:null,q:1,cat:0,query:""};
+// results: 지금 보이는 결과 목록 (data-ri 번호로 고름) / online: 식약처 상품 온라인 검색 상태
+const FoodSheet={slot:null,q:1,cat:0,query:"",results:[],online:{q:"",status:"idle",items:[]}};
+const ONLINE_MSG={
+  login:"상품 검색은 로그인해야 쓸 수 있어요 (오늘 탭 → 오늘 기록에서 로그인).",
+  offline:"오프라인이라 상품 검색을 할 수 없어요.",
+  config:"Supabase 설정이 없어 상품 검색을 쓸 수 없어요.",
+  server:"상품 검색 서버에 연결하지 못했어요. 잠시 후 다시 시도하세요."
+};
+function foodRow(r,i,q){
+  const meta=[r.brand,r.serv?"1회 "+r.serv:"",r.type==="kr"?"식약처 음식":r.type==="online"?"식약처 상품":""].filter(Boolean).join(" · ");
+  return '<button type="button" class="frow" data-ri="'+i+'"><span class="fname"><span>'+esc(r.name)+'</span>'+(meta?'<small>'+esc(meta)+'</small>':'')+'</span>'
+    +'<span class="num muted">'+fmt(Math.round(r.kcal*q))+'kcal · '+Math.round(r.p*q)+'g</span></button>';
+}
 function renderFoodSheet(){
-  const fs=FoodSheet, isX=fs.slot==="__x";
+  const fs=FoodSheet, isX=fs.slot==="__x", searching=!!normName(fs.query);
   $("fsTitle").textContent=isX?"간식·음료 추가":"음식 추가 · "+fs.slot;
   document.querySelectorAll("#fsQty [data-q]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.q===fs.q)));
-  const freq=(PINNED_FOODS[fs.slot]||[]).map(id=>FOOD_BY_ID[id]).filter(Boolean);
-  $("fsFreq").innerHTML=!fs.query&&freq.length?'<span class="small muted">자주 먹는 것</span>'+freq.map(f=>'<button type="button" class="fchip" data-food="'+f.id+'">'+esc(f.name)+'</button>').join(""):"";
-  $("fsCats").innerHTML=fs.query?"":FOOD_CATS.map((c,i)=>'<button type="button" class="fcat" data-cat="'+i+'" aria-pressed="'+(i===fs.cat)+'">'+esc(c)+'</button>').join("");
-  const q=fs.query.replace(/\s/g,"");
-  const list=q?FOODS.filter(f=>f.name.replace(/\s/g,"").includes(q)):FOODS.filter(f=>f.cat===fs.cat);
-  $("fsList").innerHTML=list.length?list.map(f=>'<button type="button" class="frow" data-food="'+f.id+'"><span>'+esc(f.name)+'</span><span class="num muted">'+fmt(Math.round(f.kcal*fs.q))+'kcal · '+Math.round(f.p*fs.q)+'g</span></button>').join("")
-    :'<p class="small muted">찾는 음식이 없어요. 아래 \'직접 입력\'으로 추가하세요.</p>';
+  const pinned=(PINNED_FOODS[fs.slot]||[]).map(id=>FOOD_BY_ID[id]).filter(Boolean);
+  $("fsFreq").innerHTML=!searching&&pinned.length?'<span class="small muted">자주 먹는 것</span>'+pinned.map(f=>'<button type="button" class="fchip" data-food="'+f.id+'">'+esc(f.name)+'</button>').join(""):"";
+  $("fsCats").innerHTML=searching?"":FOOD_CATS.map((c,i)=>'<button type="button" class="fcat" data-cat="'+i+'" aria-pressed="'+(i===fs.cat)+'">'+esc(c)+'</button>').join("");
+
+  // 결과: 검색 중이면 기본 목록 + 식약처 음식, 아니면 분류별 기본 목록
+  fs.results=searching?searchFoods(fs.query):FOODS.filter(f=>f.cat===fs.cat).map(f=>({type:"app",id:f.id,name:f.name,kcal:f.kcal,p:f.p}));
+  let note="";
+  if(searching&&!KrFoods.ready()){
+    note='<p class="small muted fs-note">식약처 음식 목록을 불러오는 중…</p>';
+    KrFoods.load().then(()=>{if(!$("foodSheet").hidden)renderFoodSheet()}).catch(()=>{
+      if(!$("foodSheet").hidden) $("fsList").insertAdjacentHTML("afterbegin",'<p class="small muted fs-note">식약처 음식 목록을 불러오지 못했어요. 인터넷에 연결된 상태로 한 번 열면 이후엔 오프라인에서도 검색됩니다.</p>');
+    });
+  }
+  const rows=fs.results.map((r,i)=>foodRow(r,i,fs.q)).join("");
+  $("fsList").innerHTML=note+(rows||(searching&&KrFoods.ready()?'<p class="small muted fs-note">음식 목록에 없어요. 아래 상품 검색이나 \'직접 입력\'을 써 보세요.</p>':""));
+
+  // 식약처 상품(가공식품) 온라인 검색
+  const on=fs.online, box=$("fsOnline");
+  if(!searching||normName(fs.query).length<2){box.innerHTML="";return}
+  if(on.q!==fs.query) Object.assign(on,{q:fs.query,status:"idle",items:[]});
+  if(on.status==="idle") box.innerHTML='<button type="button" class="madd fs-onbtn" data-online>식약처 상품에서 \''+esc(fs.query)+'\' 찾기 (온라인)</button>';
+  else if(on.status==="loading") box.innerHTML='<p class="small muted fs-note">식약처 상품 검색 중…</p>';
+  else if(on.status==="done"){
+    const base=fs.results.length;
+    fs.results=fs.results.concat(on.items.map(x=>Object.assign({type:"online"},x)));
+    box.innerHTML='<div class="small strong fs-onhead">식약처 상품 '+on.items.length+'건</div>'
+      +(on.items.length?on.items.map((r,i)=>foodRow(Object.assign({type:"online"},r),base+i,fs.q)).join(""):'<p class="small muted fs-note">찾는 상품이 없어요. 포장지 영양정보를 보고 \'직접 입력\'으로 넣어 주세요.</p>');
+  }else box.innerHTML='<p class="small muted fs-note">'+esc(ONLINE_MSG[on.status]||ONLINE_MSG.server)+'</p><button type="button" class="madd fs-onbtn" data-online>다시 시도</button>';
 }
 // iOS는 키보드가 올라와도 화면 크기는 그대로이고 '보이는 영역'만 줄어듦 → 시트를 보이는 영역에 맞춤
 function fitSheetToViewport(){

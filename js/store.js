@@ -156,8 +156,20 @@ const Store=(function(){
     }
   }
 
+  // Supabase 서버 함수 호출 (로그인 사용자만). 실패 이유: config | offline | login | server
+  async function callFunction(name,body){
+    if(!configured) return {error:{code:"config"}};
+    if(navigator.onLine===false) return {error:{code:"offline"}};
+    if(!(await connect())) return {error:{code:"offline"}};
+    if(!user) return {error:{code:"login"}};
+    try{
+      const {data,error}=await sb.functions.invoke(name,{body});
+      return error?{error:{code:"server",message:error.message}}:{data};
+    }catch(e){return {error:{code:"server",message:String(e)}}}
+  }
+
   return {
-    init, save, sync,
+    init, save, sync, callFunction,
     hasPending:()=>configured&&dirty().size>0,
     get:d=>logs[d],
     isRemote:()=>mode==="remote",

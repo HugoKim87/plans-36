@@ -6,7 +6,8 @@
  *   s: { "아침": {m:"plan",k,p} | {m:"skip"} | {m:"custom",items:[...]}, ... },   // 끼니별
  *   x: [ ...items ]                                                                 // 추가 간식·음료
  * }
- * item = {f:"jeyukdeop", q:1}  또는 직접 입력 {f:"custom", n:"이름", k:300, p:10, q:1}
+ * item = {f:"jeyukdeop", q:1}  (기본 목록)
+ *      또는 {f:"custom"|"kr"|"online", n:"이름", k:300, p:10, q:1}  (직접 입력·식약처 음식·식약처 상품: 칼로리 함께 저장)
  * '계획대로'는 체크한 순간의 계획 칼로리(k,p)를 함께 저장해, 나중에 계획이 바뀌어도 그날 섭취량은 그대로 유지
  */
 
@@ -30,7 +31,8 @@ function calorieAdjust(date,log){
 }
 
 /* ---------- 섭취량 ---------- */
-const itemFood=it=>it.f==="custom"?{name:it.n||"직접 입력",kcal:+it.k||0,p:+it.p||0}:(FOOD_BY_ID[it.f]||{name:it.f,kcal:0,p:0});
+// 항목에 칼로리(k)가 저장돼 있으면 그 값(직접 입력·식약처 음식·온라인 상품), 없으면 기본 목록에서 찾음
+const itemFood=it=>it.k!=null?{name:it.n||"직접 입력",kcal:+it.k||0,p:+it.p||0}:(FOOD_BY_ID[it.f]||{name:it.f,kcal:0,p:0});
 const itemKcal=it=>itemFood(it).kcal*(+it.q||1);
 const itemProt=it=>itemFood(it).p*(+it.q||1);
 const slotNames=date=>MENU[dowOf(date)].map(m=>m.t);

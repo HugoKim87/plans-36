@@ -286,6 +286,12 @@ body.timer-on main .wrap{padding-bottom:180px}
 .frow{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;padding:11px 2px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
 .frow:hover{background:var(--sunk)}
 .frow .num{font-size:13px;white-space:nowrap}
+.frow .fname{display:grid;gap:2px;min-width:0}
+.frow .fname small{font-size:12px;color:var(--muted)}
+.fs-note{padding:10px 2px}
+.fs-online{display:grid;gap:0}
+.fs-onbtn{width:100%;margin-top:4px}
+.fs-onhead{padding:10px 2px 4px;border-bottom:1px solid var(--line)}
 .fs-custom summary{cursor:pointer;font-size:14px;color:var(--accent);font-weight:600}
 .fs-cform{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-top:8px;align-items:center}
 .fs-cform .status{grid-column:1/-1}
